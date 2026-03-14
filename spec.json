@@ -1,0 +1,103 @@
+{
+  "project": {
+    "name": "Three-Ball Pub Tournament",
+    "stack": ["PHP", "SQLite", "Vanilla JS", "CSS"],
+    "goal": "Run a pub 3-ball tournament with timed turns, fixed queue rotation, chip elimination, and public leaderboard display."
+  },
+  "rules": {
+    "chips_per_player": 5,
+    "timer_seconds": 60,
+    "queue_mode": "fixed_circular",
+    "score_rule": {
+      "keep_chip_max_score": 4,
+      "lose_chip_if_score_gt": 4
+    },
+    "timeout_rule": {
+      "lose_chip": true,
+      "end_turn": true
+    },
+    "elimination_rule": {
+      "eliminate_if_chips_lte": 0,
+      "skip_eliminated_in_queue": true
+    }
+  },
+  "entities": {
+    "tournament": [
+      "id",
+      "name",
+      "venue_name",
+      "starting_pot",
+      "current_pot",
+      "timer_seconds",
+      "chips_per_player",
+      "status",
+      "current_player_id",
+      "current_turn_started_at",
+      "current_turn_expires_at",
+      "current_cycle_number",
+      "created_at"
+    ],
+    "player": [
+      "id",
+      "tournament_id",
+      "display_name",
+      "queue_position",
+      "chips_remaining",
+      "is_eliminated",
+      "eliminated_at",
+      "created_at"
+    ],
+    "turn": [
+      "id",
+      "tournament_id",
+      "player_id",
+      "cycle_number",
+      "turn_number",
+      "score_nullable",
+      "result_type",
+      "chip_delta",
+      "payout_delta",
+      "note_nullable",
+      "created_at"
+    ]
+  },
+  "pages": {
+    "setup": [
+      "create tournament",
+      "set pot",
+      "set timer",
+      "add players one per line",
+      "start tournament"
+    ],
+    "control": [
+      "show current player",
+      "show up next",
+      "countdown timer",
+      "score buttons 1..9",
+      "timeout button",
+      "recent history"
+    ],
+    "display": [
+      "tournament title",
+      "current pot",
+      "current player",
+      "up next",
+      "countdown timer",
+      "leaderboard",
+      "recent results"
+    ]
+  },
+  "api": {
+    "GET /api/state.php": "return current state as JSON",
+    "POST /api/submit_score.php": "submit score for current player and advance queue",
+    "POST /api/timeout.php": "apply timeout chip loss and advance queue"
+  },
+  "deferred": [
+    "jackpot automation",
+    "tie payout automation",
+    "manual pot adjustment UI",
+    "undo",
+    "authentication",
+    "player qr view"
+  ]
+}
