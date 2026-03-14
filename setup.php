@@ -72,6 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $state = tournament_state();
+$formName = $state ? ($state['tournament']['name'] ?? 'Classic Pub 3-Ball Tournament') : 'Classic Pub 3-Ball Tournament';
+$formVenue = $state ? ($state['tournament']['venue_name'] ?? 'Classic Pub') : 'Classic Pub';
+$formStartingPot = $state ? (int)($state['tournament']['starting_pot'] ?? 720) : 720;
+$formTimerSeconds = $state ? (int)($state['tournament']['timer_seconds'] ?? 60) : 60;
+$formChipsPerPlayer = $state ? (int)($state['tournament']['chips_per_player'] ?? 5) : 5;
+$formPlayers = $state ? implode("\n", array_map(fn($p) => $p['display_name'], $state['players'])) : "Andy\nJoe\nMike Ted\nSteve\nRandy";
 ?>
 <!doctype html>
 <html lang="en">
@@ -97,24 +103,20 @@ button{padding:.7rem 1rem;border-radius:10px;border:1px solid #999;background:#f
 <?php if ($message): ?>
 <p><strong><?= h($message) ?></strong></p>
 <?php endif; ?>
-<form method="post">
+<form method="post" onsubmit="return confirm('Are you sure? This will replace the current tournament and all data.');">
 <input type="hidden" name="action" value="create">
 <label>Tournament Name</label>
-<input name="name" value="Classic Pub 3-Ball Tournament">
+<input name="name" value="<?= h($formName) ?>">
 <label>Venue Name</label>
-<input name="venue_name" value="Classic Pub">
+<input name="venue_name" value="<?= h($formVenue) ?>">
 <label>Starting Pot</label>
-<input name="starting_pot" type="number" value="720">
+<input name="starting_pot" type="number" value="<?= (int)$formStartingPot ?>">
 <label>Timer Seconds</label>
-<input name="timer_seconds" type="number" value="60">
+<input name="timer_seconds" type="number" value="<?= (int)$formTimerSeconds ?>">
 <label>Chips Per Player</label>
-<input name="chips_per_player" type="number" value="5">
+<input name="chips_per_player" type="number" value="<?= (int)$formChipsPerPlayer ?>">
 <label>Players (one per line)</label>
-<textarea name="players">Andy
-Joe
-Mike Ted
-Steve
-Randy</textarea>
+<textarea name="players"><?= h($formPlayers) ?></textarea>
 <div class="actions">
 <button type="submit">Create / Replace Tournament</button>
 </div>
@@ -127,10 +129,11 @@ Randy</textarea>
 <input type="hidden" name="action" value="start">
 <button type="submit">Start Tournament</button>
 </form>
-<form method="post" style="display:inline-block" onsubmit="return confirm('Reset everything?');">
+<form method="post" style="display:inline-block" onsubmit="return confirm('Are you sure? This will delete all tournament data.');">
 <input type="hidden" name="action" value="reset">
 <button type="submit">Reset All Data</button>
 </form>
+<a href="control.php" style="display:inline-block;margin-left:.75rem;padding:.7rem 1rem;border-radius:10px;border:1px solid #999;background:#fff;color:#222;text-decoration:none;font:inherit;cursor:pointer">View Control</a>
 </div>
 
 <?php if ($state): ?>

@@ -59,7 +59,7 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 </head>
 <body>
 <div class="wrap">
-<div class="card" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+<div class="card" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:nowrap">
 <div>
 <div class="small"><?= h($t['name']) ?></div>
 <div class="big"><?= h($current['display_name'] ?? 'No current player') ?></div>
@@ -85,7 +85,7 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 </div>
 </div>
 <?php else: ?>
-<div class="pot-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #333">
+<div class="pot-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:nowrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #333">
 <span class="pot-display" style="font-size:1.5rem;font-weight:bold;color:#8df0a1">Pot: $<?= h((string)$t['current_pot']) ?></span>
 <form method="post" action="api/payout.php" style="display:flex;align-items:center;gap:.5rem">
 <input type="number" name="amount" min="1" step="1" placeholder="Payout $" style="width:100px;padding:.5rem;font-size:1rem;border:2px solid #333;border-radius:8px;background:#2a2a2a;color:#fff">
@@ -101,13 +101,15 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 </form>
 <?php endforeach; ?>
 <?php endif; ?>
-<form method="get" action="setup.php" style="display:inline-block;margin-left:.5rem">
+<form method="post" action="api/stop.php" onsubmit="return confirm('Are you sure you want to stop the tournament?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<button class="neutral" type="submit">Stop Tournament</button>
+</form>
+<form method="get" action="setup.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Setup</button>
 </form>
-<form method="get" action="display.php" target="_blank">
+<form method="get" action="display.php" target="_blank" style="display:inline-block;margin-top:1rem">
 <button class="neutral" type="submit">Public Display</button>
 </form>
-</div>
 </div>
 
 <div class="card">
@@ -125,7 +127,6 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <?php endforeach; ?>
 </tbody>
 </table>
-</div>
 </div>
 </div>
 <script>
