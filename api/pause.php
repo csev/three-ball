@@ -11,6 +11,6 @@ if (!auth_valid()) {
     exit;
 }
 
-$_SESSION['tournament_paused'] = true;
+set_tournament_paused(true);
 header('Location: ../control.php');
 exit;

@@ -16,7 +16,7 @@ $current = $state['current_player'];
 $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
 $waitingForBreak = !empty($current) && empty($breakStartedAt);
-$isPaused = !empty($_SESSION['tournament_paused']);
+$isPaused = tournament_paused();
 ?>
 <!doctype html>
 <html lang="en">
