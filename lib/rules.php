@@ -180,7 +180,10 @@ function advance_queue(int $tournamentId): void
 
     $firstActiveId = (int) $active[0]['id'];
     $cycleNumber = (int) $tournament['current_cycle_number'];
-    if ($nextId === $firstActiveId && !empty($tournament['current_player_id'])) {
+    // Only increment round when we naturally wrap - not when current player was eliminated
+    $currentPlayerId = (int) ($tournament['current_player_id'] ?? 0);
+    $currentPlayerStillActive = $currentPlayerId > 0 && array_filter($active, fn($p) => (int) $p['id'] === $currentPlayerId);
+    if ($nextId === $firstActiveId && !empty($tournament['current_player_id']) && $currentPlayerStillActive) {
         $cycleNumber++;
         $stmt = db()->prepare('UPDATE tournaments SET current_cycle_number = ? WHERE id = ?');
         $stmt->execute([$cycleNumber, $tournamentId]);
