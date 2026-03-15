@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/rules.php';
@@ -12,6 +13,7 @@ $t = $state['tournament'];
 $current = $state['current_player'];
 $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
+$isPaused = !empty($_SESSION['tournament_paused']);
 ?>
 <!doctype html>
 <html lang="en">
@@ -47,11 +49,13 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 .small{font-size:1.1rem;color:#c8d3dd}
 .score-1,.score-2,.score-3,.score-4{color:#8df0a1}
 .score-5{color:#ff8a80}
+.paused-banner{position:fixed;top:0;left:0;right:0;background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 @media (max-width:1000px){.grid{grid-template-columns:1fr}.upnext{font-size:2.8rem}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<?php if ($isPaused): ?><div class="paused-banner">PAUSED</div><?php endif; ?>
+<div class="wrap" style="<?= $isPaused ? 'margin-top:5rem' : '' ?>">
 <div class="header">
 <div>
 <div class="title"><?= h($t['name']) ?></div>

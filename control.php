@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/lib/auth.php';
 require_auth('control.php');
 require_once __DIR__ . '/lib/db.php';
@@ -15,6 +16,7 @@ $current = $state['current_player'];
 $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
 $waitingForBreak = !empty($current) && empty($breakStartedAt);
+$isPaused = !empty($_SESSION['tournament_paused']);
 ?>
 <!doctype html>
 <html lang="en">
@@ -97,6 +99,15 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <button class="<?= $score <= 4 ? 'score' : 'bad' ?>" type="submit"><?= $score ?></button>
 </form>
 <?php endforeach; ?>
+<?php endif; ?>
+<?php if ($isPaused): ?>
+<form method="post" action="api/resume.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<button class="neutral" type="submit" style="background:#2e7d32">Resume Tournament</button>
+</form>
+<?php else: ?>
+<form method="post" action="api/pause.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<button class="neutral" type="submit" style="background:#f57c00">Pause Tournament</button>
+</form>
 <?php endif; ?>
 <form method="post" action="api/undo.php" onsubmit="return confirm('Undo last score?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Undo Last</button>
