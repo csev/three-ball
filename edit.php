@@ -62,6 +62,12 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <label style="display:flex;align-items:center;gap:.5rem">Main Pot Origin: $<input type="number" name="starting_pot" min="0" value="<?= (int)($t['starting_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
 <label style="display:flex;align-items:center;gap:.5rem">First 5 Pot Origin: $<input type="number" name="starting_first_five_round_pot" min="0" value="<?= (int)($t['starting_first_five_round_pot'] ?? $t['first_five_round_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
 <label style="display:flex;align-items:center;gap:.5rem">Current Round: <input type="number" name="current_cycle_number" min="1" max="15" value="<?= (int)($t['current_cycle_number'] ?? 1) ?>" style="width:4rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
+<label style="display:flex;align-items:center;gap:.5rem">Current Player: <select name="current_player_id" style="padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px;min-width:10rem">
+<option value="">— None —</option>
+<?php foreach ($players as $p): ?>
+<option value="<?= (int)$p['id'] ?>" <?= ((int)($t['current_player_id'] ?? 0) === (int)$p['id']) ? 'selected' : '' ?>><?= h($p['display_name']) ?> (<?= (int)$p['is_eliminated'] ? 'OUT' : 'IN' ?>)</option>
+<?php endforeach; ?>
+</select></label>
 </div>
 </div>
 <div class="card">
