@@ -54,9 +54,15 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <body>
 <div class="wrap">
 <h1>Edit Tournament — <?= h($t['name']) ?></h1>
-<p style="color:#999;font-size:.9rem">Edit chips, First 5 $, Main $, and round scores. Chips = 0 means OUT. Scores: 1–5 or TO (timeout).</p>
+<p style="color:#999;font-size:.9rem">Edit chips, First 5 $, Main $, and round scores. Chips = 0 means OUT. Scores: 1–5 or TO (timeout). Pot origins set the starting pool; computed pot = origin minus total awarded.</p>
 
 <form method="post" action="api/save_edit.php">
+<div class="card" style="margin-bottom:1rem">
+<div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:center;padding-bottom:1rem;border-bottom:1px solid #333">
+<label style="display:flex;align-items:center;gap:.5rem">Main Pot Origin: $<input type="number" name="starting_pot" min="0" value="<?= (int)($t['starting_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
+<label style="display:flex;align-items:center;gap:.5rem">First 5 Pot Origin: $<input type="number" name="starting_first_five_round_pot" min="0" value="<?= (int)($t['starting_first_five_round_pot'] ?? $t['first_five_round_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
+</div>
+</div>
 <div class="card">
 <div class="edit-wrap">
 <table class="edit-table">
