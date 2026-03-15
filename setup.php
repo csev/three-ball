@@ -36,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->exec('DELETE FROM players');
             $pdo->exec('DELETE FROM tournaments');
 
-            $stmt = $pdo->prepare('INSERT INTO tournaments (name, venue_name, starting_pot, current_pot, first_five_round_pot, timer_seconds, chips_per_player, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$name, $venue, $startingPot, $startingPot, $firstFiveRoundPot, $timerSeconds, $chipsPerPlayer, 'setup', now_utc()]);
+            $stmt = $pdo->prepare('INSERT INTO tournaments (name, venue_name, starting_pot, current_pot, first_five_round_pot, starting_first_five_round_pot, timer_seconds, chips_per_player, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$name, $venue, $startingPot, $startingPot, $firstFiveRoundPot, $firstFiveRoundPot, $timerSeconds, $chipsPerPlayer, 'setup', now_utc()]);
             $tournamentId = (int) $pdo->lastInsertId();
 
             $names = preg_split('/\R+/', $playersText) ?: [];
@@ -79,7 +79,7 @@ $formStartingPot = $state ? (int)($state['tournament']['starting_pot'] ?? 720) :
 $formFirstFiveRoundPot = $state ? (int)($state['tournament']['first_five_round_pot'] ?? 0) : 0;
 $formTimerSeconds = $state ? (int)($state['tournament']['timer_seconds'] ?? 60) : 60;
 $formChipsPerPlayer = $state ? (int)($state['tournament']['chips_per_player'] ?? 5) : 5;
-$formPlayers = $state ? implode("\n", array_map(fn($p) => $p['display_name'], $state['players'])) : "Andy\nJoe\nMike Ted\nSteve\nRandy";
+$formPlayers = $state ? implode("\n", array_map(fn($p) => $p['display_name'], $state['players'])) : "Andy\nJoe\nMike\nSteve\nRandy";
 ?>
 <!doctype html>
 <html lang="en">

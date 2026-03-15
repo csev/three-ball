@@ -96,4 +96,51 @@ function migrate(PDO $pdo): void
     if (!$hasFirstFive) {
         $pdo->exec("ALTER TABLE tournaments ADD COLUMN first_five_round_pot INTEGER NOT NULL DEFAULT 0");
     }
+
+    // Add wins (amount won) to players
+    $cols = $pdo->query("PRAGMA table_info(players)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasWins = false;
+    foreach ($cols as $c) {
+        if ($c['name'] === 'wins') {
+            $hasWins = true;
+            break;
+        }
+    }
+    if (!$hasWins) {
+        $pdo->exec("ALTER TABLE players ADD COLUMN wins INTEGER NOT NULL DEFAULT 0");
+    }
+
+    // Add first_five_amount and main_pot_amount to players
+    $cols = $pdo->query("PRAGMA table_info(players)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasFirstFive = false;
+    $hasMainPot = false;
+    foreach ($cols as $c) {
+        if ($c['name'] === 'first_five_amount') $hasFirstFive = true;
+        if ($c['name'] === 'main_pot_amount') $hasMainPot = true;
+    }
+    if (!$hasFirstFive) {
+        $pdo->exec("ALTER TABLE players ADD COLUMN first_five_amount INTEGER NOT NULL DEFAULT 0");
+    }
+    if (!$hasMainPot) {
+        $pdo->exec("ALTER TABLE players ADD COLUMN main_pot_amount INTEGER NOT NULL DEFAULT 0");
+    }
+
+    // Add starting_first_five_round_pot (origin for First 5 pot - never changed)
+    $cols = $pdo->query("PRAGMA table_info(tournaments)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasStartFirstFive = false;
+    foreach ($cols as $c) {
+        if ($c['name'] === 'starting_first_five_round_pot') {
+            $hasStartFirstFive = true;
+            break;
+        }
+    }
+    if (!$hasStartFirstFive) {
+        $pdo->exec("ALTER TABLE tournaments ADD COLUMN starting_first_five_round_pot INTEGER NOT NULL DEFAULT 0");
+        // Backfill: reconstruct origin from current pot + awarded amounts
+        $rows = $pdo->query("SELECT t.id, t.first_five_round_pot, COALESCE(SUM(p.first_five_amount), 0) as awarded FROM tournaments t LEFT JOIN players p ON p.tournament_id = t.id GROUP BY t.id")->fetchAll();
+        foreach ($rows as $r) {
+            $origin = (int)$r['first_five_round_pot'] + (int)$r['awarded'];
+            $pdo->prepare("UPDATE tournaments SET starting_first_five_round_pot = ? WHERE id = ?")->execute([$origin, $r['id']]);
+        }
+    }
 }

@@ -34,14 +34,19 @@ body{font-family:Arial,sans-serif;background:#081018;color:white;margin:0;paddin
 .leaderboard-wrap{overflow-x:auto;margin-top:.5rem}
 .leaderboard{width:max-content;border-collapse:collapse;font-size:1.4rem}
 .leaderboard th,.leaderboard td{padding:.6rem .5rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left;white-space:nowrap}
-.leaderboard .col-frozen{position:sticky;left:0;background:#0d1520;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.3)}
-.leaderboard .col-frozen-2{left:5rem}
-.leaderboard .col-frozen-3{left:9rem}
-.leaderboard .col-frozen-4{left:12rem}
+.leaderboard .col-frozen,.leaderboard .col-frozen-2,.leaderboard .col-frozen-3,.leaderboard .col-frozen-4,.leaderboard .col-frozen-5,.leaderboard .col-frozen-6{position:sticky;background:#0d1520;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.3)}
+.leaderboard .col-frozen{left:0;min-width:2.5rem}
+.leaderboard .col-frozen-2{left:2.5rem;min-width:6rem}
+.leaderboard .col-frozen-3{left:8.5rem;min-width:2.5rem}
+.leaderboard .col-frozen-4{left:11rem;min-width:3.5rem}
+.leaderboard .col-frozen-5{left:14.5rem;min-width:3.5rem}
+.leaderboard .col-frozen-6{left:18rem;min-width:2.5rem}
 .leaderboard th.col-round{min-width:2.5rem;text-align:center}
 th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
 .out{color:#ff8a80}
 .small{font-size:1.1rem;color:#c8d3dd}
+.score-1,.score-2,.score-3,.score-4{color:#8df0a1}
+.score-5{color:#ff8a80}
 @media (max-width:1000px){.grid{grid-template-columns:1fr}.upnext{font-size:2.8rem}}
 </style>
 </head>
@@ -50,8 +55,8 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 <div class="header">
 <div>
 <div class="title"><?= h($t['name']) ?></div>
-<div class="pot">Current Pot: $<?= h((string)$t['current_pot']) ?></div>
-<div class="pot">First Five Round Pot: $<?= h((string)($t['first_five_round_pot'] ?? 0)) ?></div>
+<div class="pot">Current Pot: $<?= h((string)($state['computed_main_pot'] ?? $t['current_pot'])) ?></div>
+<div class="pot">First 5 Pot: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></div>
 </div>
 <div>
 <div class="small">Now Shooting</div>
@@ -73,7 +78,9 @@ $scoresByRound = player_scores_by_round((int) $t['id']);
 <th class="col-frozen">Pos</th>
 <th class="col-frozen col-frozen-2">Player</th>
 <th class="col-frozen col-frozen-3">Chips</th>
-<th class="col-frozen col-frozen-4">Status</th>
+<th class="col-frozen col-frozen-4">First 5 $</th>
+<th class="col-frozen col-frozen-5">Main $</th>
+<th class="col-frozen col-frozen-6">Status</th>
 <?php for ($r = 1; $r <= 15; $r++): ?><th class="col-round"><?= $r ?></th><?php endfor; ?>
 </tr>
 </thead>
@@ -86,9 +93,13 @@ $scoresByRound = player_scores_by_round((int) $t['id']);
 <td class="col-frozen"><?= h((string)$player['queue_position']) ?></td>
 <td class="col-frozen col-frozen-2"><?= h($player['display_name']) ?></td>
 <td class="col-frozen col-frozen-3"><?= h((string)$player['chips_remaining']) ?></td>
-<td class="col-frozen col-frozen-4 <?= (int)$player['is_eliminated'] ? 'out' : '' ?>"><?= (int)$player['is_eliminated'] ? 'OUT' : 'IN' ?></td>
-<?php for ($r = 1; $r <= 15; $r++): ?>
-<td class="col-round"><?= h($scores[$r] ?? '') ?></td>
+<td class="col-frozen col-frozen-4">$<?= h((string)($player['first_five_amount'] ?? 0)) ?></td>
+<td class="col-frozen col-frozen-5">$<?= h((string)($player['main_pot_amount'] ?? 0)) ?></td>
+<td class="col-frozen col-frozen-6 <?= (int)$player['is_eliminated'] ? 'out' : '' ?>"><?= (int)$player['is_eliminated'] ? 'OUT' : 'IN' ?></td>
+<?php for ($r = 1; $r <= 15; $r++):
+    $val = $scores[$r] ?? '';
+    $scoreClass = in_array((string)$val, ['1','2','3']) ? ' score-1' : ((string)$val === '4' ? ' score-4' : ((string)$val === '5' ? ' score-5' : ''));
+?><td class="col-round<?= $scoreClass ?>"><?= h($val) ?></td>
 <?php endfor; ?>
 </tr>
 <?php endforeach; ?>

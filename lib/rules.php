@@ -51,6 +51,26 @@ function player_scores_by_round(int $tournamentId): array
     return $out;
 }
 
+/** Returns [main_pot => int, first_five_pot => int] computed as origin minus sum of amounts awarded in edit screen */
+function computed_pots(int $tournamentId): array
+{
+    $stmt = db()->prepare('SELECT starting_pot, COALESCE(starting_first_five_round_pot, first_five_round_pot) AS first_five_origin FROM tournaments WHERE id = ?');
+    $stmt->execute([$tournamentId]);
+    $t = $stmt->fetch();
+    if (!$t) {
+        return ['main_pot' => 0, 'first_five_pot' => 0];
+    }
+    $stmt = db()->prepare('SELECT COALESCE(SUM(main_pot_amount), 0) AS main_awarded, COALESCE(SUM(first_five_amount), 0) AS first_five_awarded FROM players WHERE tournament_id = ?');
+    $stmt->execute([$tournamentId]);
+    $a = $stmt->fetch();
+    $mainAwarded = (int) ($a['main_awarded'] ?? 0);
+    $firstFiveAwarded = (int) ($a['first_five_awarded'] ?? 0);
+    return [
+        'main_pot' => max(0, (int) $t['starting_pot'] - $mainAwarded),
+        'first_five_pot' => max(0, (int) $t['first_five_origin'] - $firstFiveAwarded),
+    ];
+}
+
 function recent_turns(int $tournamentId, int $limit = 10): array
 {
     $stmt = db()->prepare("SELECT t.*, p.display_name
@@ -243,6 +263,7 @@ function tournament_state(): ?array
         }
     }
 
+    $computedPots = computed_pots((int) $tournament['id']);
     return [
         'tournament' => $tournament,
         'players' => $players,
@@ -250,5 +271,7 @@ function tournament_state(): ?array
         'up_next' => $upNext,
         'recent_turns' => recent_turns((int) $tournament['id']),
         'player_scores_by_round' => player_scores_by_round((int) $tournament['id']),
+        'computed_main_pot' => $computedPots['main_pot'],
+        'computed_first_five_pot' => $computedPots['first_five_pot'],
     ];
 }

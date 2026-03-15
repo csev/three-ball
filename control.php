@@ -85,21 +85,9 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 </div>
 </div>
 <?php else: ?>
-<div class="pot-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #333">
-<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-<span class="pot-display" style="font-size:1.5rem;font-weight:bold;color:#8df0a1">Pot: $<?= h((string)$t['current_pot']) ?></span>
-<form method="post" action="api/payout.php" style="display:flex;align-items:center;gap:.5rem">
-<input type="number" name="amount" min="1" step="1" placeholder="Payout $" style="width:100px;padding:.5rem;font-size:1rem;border:2px solid #333;border-radius:8px;background:#2a2a2a;color:#fff">
-<button type="submit" class="neutral" style="padding:.5rem .75rem;font-size:.95rem">Payout</button>
-</form>
-</div>
-<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-<span class="pot-display small" style="font-size:1rem;color:#90caf9">First 5: $<?= h((string)($t['first_five_round_pot'] ?? 0)) ?></span>
-<form method="post" action="api/first_five_payout.php" style="display:flex;align-items:center;gap:.5rem">
-<input type="number" name="amount" min="1" step="1" placeholder="First 5 $" style="width:100px;padding:.5rem;font-size:1rem;border:2px solid #333;border-radius:8px;background:#2a2a2a;color:#fff">
-<button type="submit" class="neutral" style="padding:.5rem .75rem;font-size:.95rem">First 5 Payout</button>
-</form>
-</div>
+<div class="pot-row" style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #333">
+<span class="pot-display" style="font-size:1.5rem;font-weight:bold;color:#8df0a1">Pot: $<?= h((string)($state['computed_main_pot'] ?? $t['current_pot'])) ?></span>
+<span class="pot-display small" style="font-size:1.1rem;color:#90caf9">First 5: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></span>
 </div>
 <h2>Enter Score</h2>
 <div class="buttons">
@@ -115,6 +103,9 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 </form>
 <form method="post" action="api/stop.php" onsubmit="return confirm('Are you sure you want to stop the tournament?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Stop Tournament</button>
+</form>
+<form method="get" action="edit.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<button class="neutral" type="submit">Edit</button>
 </form>
 <form method="get" action="setup.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Setup</button>
