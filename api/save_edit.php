@@ -23,13 +23,14 @@ $players = all_players($tournamentId);
 
 $startingPot = isset($_POST['starting_pot']) ? max(0, (int) $_POST['starting_pot']) : (int) $tournament['starting_pot'];
 $startingFirstFive = isset($_POST['starting_first_five_round_pot']) ? max(0, (int) $_POST['starting_first_five_round_pot']) : (int) ($tournament['starting_first_five_round_pot'] ?? $tournament['first_five_round_pot'] ?? 0);
+$currentCycle = isset($_POST['current_cycle_number']) ? max(1, min(15, (int) $_POST['current_cycle_number'])) : (int) ($tournament['current_cycle_number'] ?? 1);
 
 $pdo = db();
 $pdo->beginTransaction();
 try {
-    // Update pot origins
-    $stmt = $pdo->prepare('UPDATE tournaments SET starting_pot = ?, starting_first_five_round_pot = ?, current_pot = ? WHERE id = ?');
-    $stmt->execute([$startingPot, $startingFirstFive, $startingPot, $tournamentId]);
+    // Update pot origins and current round
+    $stmt = $pdo->prepare('UPDATE tournaments SET starting_pot = ?, starting_first_five_round_pot = ?, current_cycle_number = ? WHERE id = ?');
+    $stmt->execute([$startingPot, $startingFirstFive, $currentCycle, $tournamentId]);
 
     // Update chips for each player
     foreach ($players as $player) {
