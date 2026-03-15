@@ -14,6 +14,9 @@ $current = $state['current_player'];
 $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
 $isPaused = tournament_paused();
+$scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+$displayUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/display.php');
+$qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . rawurlencode($displayUrl);
 ?>
 <!doctype html>
 <html lang="en">
@@ -52,6 +55,8 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 .leaderboard tr.active-player td{background:rgba(33,150,243,.25)}
 .leaderboard tr.active-player .col-frozen,.leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3,.leaderboard tr.active-player .col-frozen-4,.leaderboard tr.active-player .col-frozen-5,.leaderboard tr.active-player .col-frozen-6{background:rgba(33,150,243,.35)}
 .paused-banner{position:fixed;top:0;left:0;right:0;background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.qr-wrap{display:flex;align-items:center}
+.qr-wrap img{width:100px;height:100px;background:white;padding:6px;border-radius:8px}
 @media (max-width:1000px){.grid{grid-template-columns:1fr}.upnext{font-size:2.8rem}}
 </style>
 </head>
@@ -65,12 +70,15 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 <div class="pot">First 5 Pot: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></div>
 <div class="small">Current Round: <?= h((string)($t['current_cycle_number'] ?? 1)) ?></div>
 </div>
+<div class="qr-wrap" style="gap:1.5rem">
 <div>
 <div class="small">Now Shooting</div>
 <div class="upnext"><?= h($current['display_name'] ?? 'Waiting...') ?></div>
 <div class="small">Up Next</div>
 <div class="upnext"><?= h($state['up_next']['display_name'] ?? '—') ?></div>
 <div class="timer" id="timer">--</div>
+</div>
+<a href="<?= h($displayUrl) ?>" title="Open display"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=<?= rawurlencode($displayUrl) ?>" alt="QR: Display" width="100" height="100"></a>
 </div>
 </div>
 
