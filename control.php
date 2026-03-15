@@ -113,9 +113,6 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <form method="post" action="api/toggle_hide_out.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit"><?= $hideOut ? 'Show Out Players' : 'Hide Out Players' ?></button>
 </form>
-<form method="post" action="api/undo.php" onsubmit="return confirm('Undo last score?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
-<button class="neutral" type="submit">Undo Last</button>
-</form>
 <form method="post" action="api/stop.php" onsubmit="return confirm('Are you sure you want to stop the tournament?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Stop Tournament</button>
 </form>
