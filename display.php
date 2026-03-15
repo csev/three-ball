@@ -27,17 +27,17 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . rawu
 <meta http-equiv="refresh" content="5">
 <style>
 body{font-family:Arial,sans-serif;background:#081018;color:white;margin:0;padding:2rem}
-.wrap{max-width:1400px;margin:0 auto}
+.wrap{max-width:1800px;margin:0 auto}
 .header{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;flex-wrap:wrap;margin-bottom:1.5rem}
-.title{font-size:3rem;font-weight:800}
-.pot{font-size:2rem;color:#8df0a1}
-.upnext{font-size:4rem;font-weight:800;margin:.25rem 0}
-.timer{font-size:3rem;color:#ffd54f}
+.title{font-size:3.8rem;font-weight:800}
+.pot{font-size:2.5rem;color:#8df0a1}
+.upnext{font-size:5rem;font-weight:800;margin:.25rem 0}
+.timer{font-size:3.8rem;color:#ffd54f}
 @keyframes late-flash{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.08)}}
 .timer.timer-late{color:#ff1744;animation:late-flash .6s ease-in-out infinite;text-shadow:0 0 20px rgba(255,23,68,.8)}
 .card{background:rgba(255,255,255,.06);border-radius:24px;padding:1.25rem 1.5rem}
 .leaderboard-wrap{overflow-x:auto;margin-top:.5rem}
-.leaderboard{width:max-content;border-collapse:collapse;font-size:1.4rem}
+.leaderboard{width:max-content;border-collapse:collapse;font-size:1.7rem}
 .leaderboard th,.leaderboard td{padding:.6rem .5rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left;white-space:nowrap}
 .leaderboard .col-frozen,.leaderboard .col-frozen-2,.leaderboard .col-frozen-3,.leaderboard .col-frozen-4,.leaderboard .col-frozen-5,.leaderboard .col-frozen-6{position:sticky;background:#0d1520;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.3)}
 .leaderboard .col-frozen{left:0;min-width:2.5rem}
@@ -49,14 +49,14 @@ body{font-family:Arial,sans-serif;background:#081018;color:white;margin:0;paddin
 .leaderboard th.col-round{min-width:2.5rem;text-align:center}
 th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
 .out{color:#ff8a80}
-.small{font-size:1.1rem;color:#c8d3dd}
+.small{font-size:1.25rem;color:#c8d3dd}
 .score-1,.score-2,.score-3,.score-4{color:#8df0a1}
 .score-5{color:#ff8a80}
 .leaderboard tr.active-player td{background:rgba(33,150,243,.25)}
 .leaderboard tr.active-player .col-frozen,.leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3,.leaderboard tr.active-player .col-frozen-4,.leaderboard tr.active-player .col-frozen-5,.leaderboard tr.active-player .col-frozen-6{background:rgba(33,150,243,.35)}
 .paused-banner{position:fixed;top:0;left:0;right:0;background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .qr-wrap{display:flex;align-items:center}
-.qr-wrap img{width:100px;height:100px;background:white;padding:6px;border-radius:8px}
+.qr-wrap img{width:260px;height:260px;background:white;padding:10px;border-radius:10px}
 @media (max-width:1000px){.grid{grid-template-columns:1fr}.upnext{font-size:2.8rem}}
 </style>
 </head>
@@ -78,7 +78,7 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 <div class="upnext"><?= h($state['up_next']['display_name'] ?? '—') ?></div>
 <div class="timer" id="timer">--</div>
 </div>
-<a href="<?= h($displayUrl) ?>" title="Open display"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=<?= rawurlencode($displayUrl) ?>" alt="QR: Display" width="100" height="100"></a>
+<a href="<?= h($displayUrl) ?>" title="Open display"><img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=<?= rawurlencode($displayUrl) ?>" alt="QR: Display" width="260" height="260"></a>
 </div>
 </div>
 
