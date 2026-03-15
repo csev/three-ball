@@ -85,27 +85,72 @@ function recent_turns(int $tournamentId, int $limit = 10): array
     return $stmt->fetchAll();
 }
 
-function next_active_player_id(array $tournament): ?int
+/** Returns first active player (queue order) who has NOT played in current round. Null if round complete. */
+function next_player_for_current_round(int $tournamentId, int $cycleNumber): ?int
 {
-    $players = active_players((int) $tournament['id']);
-    if (count($players) === 0) {
+    $active = active_players($tournamentId);
+    if (empty($active)) {
         return null;
     }
 
-    if (empty($tournament['current_player_id'])) {
-        return (int) $players[0]['id'];
-    }
+    $stmt = db()->prepare('SELECT player_id FROM turns WHERE tournament_id = ? AND cycle_number = ?');
+    $stmt->execute([$tournamentId, $cycleNumber]);
+    $playedIds = array_map('intval', array_column($stmt->fetchAll(), 'player_id'));
 
-    $currentId = (int) $tournament['current_player_id'];
-    $count = count($players);
-    foreach ($players as $index => $player) {
-        if ((int) $player['id'] === $currentId) {
-            $next = $players[($index + 1) % $count];
-            return (int) $next['id'];
+    foreach ($active as $p) {
+        $pid = (int) $p['id'];
+        if (!in_array($pid, $playedIds, true)) {
+            return $pid;
         }
     }
 
-    return (int) $players[0]['id'];
+    return null; // Everyone has played this round
+}
+
+/** Returns player id after $currentPlayerId in round order (who shoots after current). Null if current is last this round. */
+function player_after_current_round(int $tournamentId, int $cycleNumber, int $currentPlayerId): ?int
+{
+    $active = active_players($tournamentId);
+    if (empty($active)) {
+        return null;
+    }
+
+    $stmt = db()->prepare('SELECT player_id FROM turns WHERE tournament_id = ? AND cycle_number = ?');
+    $stmt->execute([$tournamentId, $cycleNumber]);
+    $playedIds = array_map('intval', array_column($stmt->fetchAll(), 'player_id'));
+
+    $found = false;
+    foreach ($active as $p) {
+        $pid = (int) $p['id'];
+        if (in_array($pid, $playedIds, true)) {
+            continue;
+        }
+        if ($found) {
+            return $pid; // Next person after current
+        }
+        if ($pid === $currentPlayerId) {
+            $found = true;
+        }
+    }
+    // Current is last to shoot this round; up next is first of next round
+    return !empty($active) ? (int) $active[0]['id'] : null;
+}
+
+function next_active_player_id(array $tournament): ?int
+{
+    $tournamentId = (int) $tournament['id'];
+    $cycleNumber = (int) ($tournament['current_cycle_number'] ?? 1);
+
+    $next = next_player_for_current_round($tournamentId, $cycleNumber);
+    if ($next !== null) {
+        return $next;
+    }
+
+    $active = active_players($tournamentId);
+    if (empty($active)) {
+        return null;
+    }
+    return (int) $active[0]['id']; // Round complete; next round starts with first active
 }
 
 function second_active_player_id(array $tournament): ?int
@@ -173,20 +218,15 @@ function advance_queue(int $tournamentId): void
         return;
     }
 
-    $nextId = next_active_player_id($tournament);
-    if ($nextId === null) {
-        return;
-    }
-
-    $firstActiveId = (int) $active[0]['id'];
     $cycleNumber = (int) $tournament['current_cycle_number'];
-    // Only increment round when we naturally wrap - not when current player was eliminated
-    $currentPlayerId = (int) ($tournament['current_player_id'] ?? 0);
-    $currentPlayerStillActive = $currentPlayerId > 0 && array_filter($active, fn($p) => (int) $p['id'] === $currentPlayerId);
-    if ($nextId === $firstActiveId && !empty($tournament['current_player_id']) && $currentPlayerStillActive) {
-        $cycleNumber++;
+    $nextId = next_player_for_current_round($tournamentId, $cycleNumber);
+
+    if ($nextId === null) {
+        // Round complete: everyone has played. Increment cycle and start next round with first active.
+        $cycleNumber = min(15, $cycleNumber + 1);
         $stmt = db()->prepare('UPDATE tournaments SET current_cycle_number = ? WHERE id = ?');
         $stmt->execute([$cycleNumber, $tournamentId]);
+        $nextId = (int) $active[0]['id'];
     }
 
     start_turn($tournamentId, $nextId);
@@ -255,18 +295,28 @@ function tournament_state(): ?array
         return null;
     }
 
-    $players = all_players((int) $tournament['id']);
+    $tournamentId = (int) $tournament['id'];
+    $players = all_players($tournamentId);
+    $cycleNumber = (int) ($tournament['current_cycle_number'] ?? 1);
+
     $currentPlayer = !empty($tournament['current_player_id']) ? find_player((int) $tournament['current_player_id']) : null;
-    $upNext = null;
-    if ($currentPlayer) {
-        $copy = $tournament;
-        $upNextId = next_active_player_id($copy);
-        if ($upNextId !== null && $upNextId !== (int) $currentPlayer['id']) {
-            $upNext = find_player($upNextId);
+    if (!$currentPlayer || (int) ($currentPlayer['is_eliminated'] ?? 0) === 1) {
+        // Stored current is missing or eliminated - derive from round (first active who hasn't played)
+        $effectiveCurrentId = next_player_for_current_round($tournamentId, $cycleNumber);
+        if ($effectiveCurrentId === null) {
+            $active = active_players($tournamentId);
+            $effectiveCurrentId = !empty($active) ? (int) $active[0]['id'] : null;
         }
+        $currentPlayer = $effectiveCurrentId ? find_player($effectiveCurrentId) : null;
     }
 
-    $computedPots = computed_pots((int) $tournament['id']);
+    $upNext = null;
+    if ($currentPlayer) {
+        $upNextId = player_after_current_round($tournamentId, $cycleNumber, (int) $currentPlayer['id']);
+        $upNext = $upNextId ? find_player($upNextId) : null;
+    }
+
+    $computedPots = computed_pots($tournamentId);
     return [
         'tournament' => $tournament,
         'players' => $players,
