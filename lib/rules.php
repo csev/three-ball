@@ -34,6 +34,23 @@ function total_turns(int $tournamentId): int
     return (int) $stmt->fetchColumn();
 }
 
+/** Returns [playerId => [cycleNumber => score|'TO']] for rounds 1-15 */
+function player_scores_by_round(int $tournamentId): array
+{
+    $stmt = db()->prepare("SELECT player_id, cycle_number, score, result_type FROM turns WHERE tournament_id = ?");
+    $stmt->execute([$tournamentId]);
+    $rows = $stmt->fetchAll();
+    $out = [];
+    foreach ($rows as $r) {
+        $pid = (int) $r['player_id'];
+        $cycle = (int) $r['cycle_number'];
+        if ($cycle < 1 || $cycle > 15) continue;
+        if (!isset($out[$pid])) $out[$pid] = [];
+        $out[$pid][$cycle] = $r['result_type'] === 'timeout' ? 'TO' : (string) ($r['score'] ?? '');
+    }
+    return $out;
+}
+
 function recent_turns(int $tournamentId, int $limit = 10): array
 {
     $stmt = db()->prepare("SELECT t.*, p.display_name
@@ -232,5 +249,6 @@ function tournament_state(): ?array
         'current_player' => $currentPlayer,
         'up_next' => $upNext,
         'recent_turns' => recent_turns((int) $tournament['id']),
+        'player_scores_by_round' => player_scores_by_round((int) $tournament['id']),
     ];
 }

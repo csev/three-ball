@@ -30,9 +30,15 @@ body{font-family:Arial,sans-serif;background:#081018;color:white;margin:0;paddin
 .timer{font-size:3rem;color:#ffd54f}
 @keyframes late-flash{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.08)}}
 .timer.timer-late{color:#ff1744;animation:late-flash .6s ease-in-out infinite;text-shadow:0 0 20px rgba(255,23,68,.8)}
-.grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}
 .card{background:rgba(255,255,255,.06);border-radius:24px;padding:1.25rem 1.5rem}
-table{width:100%;border-collapse:collapse;font-size:1.4rem}
+.leaderboard-wrap{overflow-x:auto;margin-top:.5rem}
+.leaderboard{width:max-content;border-collapse:collapse;font-size:1.4rem}
+.leaderboard th,.leaderboard td{padding:.6rem .5rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left;white-space:nowrap}
+.leaderboard .col-frozen{position:sticky;left:0;background:#0d1520;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.3)}
+.leaderboard .col-frozen-2{left:5rem}
+.leaderboard .col-frozen-3{left:9rem}
+.leaderboard .col-frozen-4{left:12rem}
+.leaderboard th.col-round{min-width:2.5rem;text-align:center}
 th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
 .out{color:#ff8a80}
 .small{font-size:1.1rem;color:#c8d3dd}
@@ -44,8 +50,8 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 <div class="header">
 <div>
 <div class="title"><?= h($t['name']) ?></div>
-<div class="small"><?= h($t['venue_name']) ?></div>
 <div class="pot">Current Pot: $<?= h((string)$t['current_pot']) ?></div>
+<div class="pot">First Five Round Pot: $<?= h((string)($t['first_five_round_pot'] ?? 0)) ?></div>
 </div>
 <div>
 <div class="small">Now Shooting</div>
@@ -55,32 +61,35 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 </div>
 </div>
 
-<div class="grid">
+<?php
+$scoresByRound = player_scores_by_round((int) $t['id']);
+?>
 <div class="card">
 <h2 style="margin-top:0">Leaderboard / Queue</h2>
-<table>
-<thead><tr><th>Pos</th><th>Player</th><th>Chips</th><th>Status</th></tr></thead>
-<tbody>
-<?php foreach ($state['players'] as $player): ?>
+<div class="leaderboard-wrap">
+<table class="leaderboard">
+<thead>
 <tr>
-<td><?= h((string)$player['queue_position']) ?></td>
-<td><?= h($player['display_name']) ?></td>
-<td><?= h((string)$player['chips_remaining']) ?></td>
-<td class="<?= (int)$player['is_eliminated'] ? 'out' : '' ?>"><?= (int)$player['is_eliminated'] ? 'OUT' : 'IN' ?></td>
+<th class="col-frozen">Pos</th>
+<th class="col-frozen col-frozen-2">Player</th>
+<th class="col-frozen col-frozen-3">Chips</th>
+<th class="col-frozen col-frozen-4">Status</th>
+<?php for ($r = 1; $r <= 15; $r++): ?><th class="col-round"><?= $r ?></th><?php endfor; ?>
 </tr>
-<?php endforeach; ?>
-</tbody>
-</table>
-</div>
-<div class="card">
-<h2 style="margin-top:0">Recent Results</h2>
-<table>
+</thead>
 <tbody>
-<?php foreach ($state['recent_turns'] as $turn): ?>
+<?php foreach ($state['players'] as $player):
+    $pid = (int) $player['id'];
+    $scores = $scoresByRound[$pid] ?? [];
+?>
 <tr>
-<td><?= h($turn['display_name']) ?></td>
-<td><?= $turn['score'] !== null ? 'Score ' . h((string)$turn['score']) : h(strtoupper($turn['result_type'])) ?></td>
-<td><?= $turn['chip_delta'] ? h((string)$turn['chip_delta']) . ' chip' : 'ok' ?></td>
+<td class="col-frozen"><?= h((string)$player['queue_position']) ?></td>
+<td class="col-frozen col-frozen-2"><?= h($player['display_name']) ?></td>
+<td class="col-frozen col-frozen-3"><?= h((string)$player['chips_remaining']) ?></td>
+<td class="col-frozen col-frozen-4 <?= (int)$player['is_eliminated'] ? 'out' : '' ?>"><?= (int)$player['is_eliminated'] ? 'OUT' : 'IN' ?></td>
+<?php for ($r = 1; $r <= 15; $r++): ?>
+<td class="col-round"><?= h($scores[$r] ?? '') ?></td>
+<?php endfor; ?>
 </tr>
 <?php endforeach; ?>
 </tbody>

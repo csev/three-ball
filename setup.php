@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name'] ?? 'Classic Pub 3-Ball');
         $venue = trim($_POST['venue_name'] ?? '');
         $startingPot = post_int('starting_pot', 0);
+        $firstFiveRoundPot = post_int('first_five_round_pot', 0);
         $timerSeconds = post_int('timer_seconds', 60);
         $chipsPerPlayer = post_int('chips_per_player', 5);
         $playersText = trim($_POST['players'] ?? '');
@@ -35,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->exec('DELETE FROM players');
             $pdo->exec('DELETE FROM tournaments');
 
-            $stmt = $pdo->prepare('INSERT INTO tournaments (name, venue_name, starting_pot, current_pot, timer_seconds, chips_per_player, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$name, $venue, $startingPot, $startingPot, $timerSeconds, $chipsPerPlayer, 'setup', now_utc()]);
+            $stmt = $pdo->prepare('INSERT INTO tournaments (name, venue_name, starting_pot, current_pot, first_five_round_pot, timer_seconds, chips_per_player, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$name, $venue, $startingPot, $startingPot, $firstFiveRoundPot, $timerSeconds, $chipsPerPlayer, 'setup', now_utc()]);
             $tournamentId = (int) $pdo->lastInsertId();
 
             $names = preg_split('/\R+/', $playersText) ?: [];
@@ -75,6 +76,7 @@ $state = tournament_state();
 $formName = $state ? ($state['tournament']['name'] ?? 'Classic Pub 3-Ball Tournament') : 'Classic Pub 3-Ball Tournament';
 $formVenue = $state ? ($state['tournament']['venue_name'] ?? 'Classic Pub') : 'Classic Pub';
 $formStartingPot = $state ? (int)($state['tournament']['starting_pot'] ?? 720) : 720;
+$formFirstFiveRoundPot = $state ? (int)($state['tournament']['first_five_round_pot'] ?? 0) : 0;
 $formTimerSeconds = $state ? (int)($state['tournament']['timer_seconds'] ?? 60) : 60;
 $formChipsPerPlayer = $state ? (int)($state['tournament']['chips_per_player'] ?? 5) : 5;
 $formPlayers = $state ? implode("\n", array_map(fn($p) => $p['display_name'], $state['players'])) : "Andy\nJoe\nMike Ted\nSteve\nRandy";
@@ -111,6 +113,8 @@ button{padding:.7rem 1rem;border-radius:10px;border:1px solid #999;background:#f
 <input name="venue_name" value="<?= h($formVenue) ?>">
 <label>Starting Pot</label>
 <input name="starting_pot" type="number" value="<?= (int)$formStartingPot ?>">
+<label>First Five Round Pot</label>
+<input name="first_five_round_pot" type="number" value="<?= (int)$formFirstFiveRoundPot ?>">
 <label>Timer Seconds</label>
 <input name="timer_seconds" type="number" value="<?= (int)$formTimerSeconds ?>">
 <label>Chips Per Player</label>

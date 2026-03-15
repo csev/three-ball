@@ -85,22 +85,34 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 </div>
 </div>
 <?php else: ?>
-<div class="pot-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:nowrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #333">
+<div class="pot-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #333">
+<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
 <span class="pot-display" style="font-size:1.5rem;font-weight:bold;color:#8df0a1">Pot: $<?= h((string)$t['current_pot']) ?></span>
 <form method="post" action="api/payout.php" style="display:flex;align-items:center;gap:.5rem">
 <input type="number" name="amount" min="1" step="1" placeholder="Payout $" style="width:100px;padding:.5rem;font-size:1rem;border:2px solid #333;border-radius:8px;background:#2a2a2a;color:#fff">
 <button type="submit" class="neutral" style="padding:.5rem .75rem;font-size:.95rem">Payout</button>
 </form>
 </div>
+<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+<span class="pot-display small" style="font-size:1rem;color:#90caf9">First 5: $<?= h((string)($t['first_five_round_pot'] ?? 0)) ?></span>
+<form method="post" action="api/first_five_payout.php" style="display:flex;align-items:center;gap:.5rem">
+<input type="number" name="amount" min="1" step="1" placeholder="First 5 $" style="width:100px;padding:.5rem;font-size:1rem;border:2px solid #333;border-radius:8px;background:#2a2a2a;color:#fff">
+<button type="submit" class="neutral" style="padding:.5rem .75rem;font-size:.95rem">First 5 Payout</button>
+</form>
+</div>
+</div>
 <h2>Enter Score</h2>
 <div class="buttons">
-<?php foreach ([1,2,3,4,5,6,7,8,9] as $score): ?>
+<?php foreach ([1,2,3,4,5] as $score): ?>
 <form method="post" action="api/submit_score.php">
 <input type="hidden" name="score" value="<?= $score ?>">
 <button class="<?= $score <= 4 ? 'score' : 'bad' ?>" type="submit"><?= $score ?></button>
 </form>
 <?php endforeach; ?>
 <?php endif; ?>
+<form method="post" action="api/undo.php" onsubmit="return confirm('Undo last score?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<button class="neutral" type="submit">Undo Last</button>
+</form>
 <form method="post" action="api/stop.php" onsubmit="return confirm('Are you sure you want to stop the tournament?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Stop Tournament</button>
 </form>

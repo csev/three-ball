@@ -83,4 +83,17 @@ function migrate(PDO $pdo): void
     if (!$hasBreak) {
         $pdo->exec("ALTER TABLE tournaments ADD COLUMN break_started_at TEXT DEFAULT NULL");
     }
+
+    // Add first_five_round_pot for existing DBs
+    $cols = $pdo->query("PRAGMA table_info(tournaments)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasFirstFive = false;
+    foreach ($cols as $c) {
+        if ($c['name'] === 'first_five_round_pot') {
+            $hasFirstFive = true;
+            break;
+        }
+    }
+    if (!$hasFirstFive) {
+        $pdo->exec("ALTER TABLE tournaments ADD COLUMN first_five_round_pot INTEGER NOT NULL DEFAULT 0");
+    }
 }

@@ -9,7 +9,7 @@ if (!$tournament || empty($tournament['current_player_id'])) {
     redirect_to('../setup.php');
 }
 $score = isset($_POST['score']) ? (int) $_POST['score'] : null;
-if ($score === null) {
+if ($score === null || $score < 1 || $score > 5) {
     redirect_to('../control.php');
 }
 // Must have pressed Break before entering score (no scoring during countdown phase)
