@@ -53,3 +53,24 @@ function set_tournament_paused(bool $paused): void
         unlink($path);
     }
 }
+
+/** Hide eliminated players on display; stored in file so display (on different device) reads it */
+function hide_out_players(): bool
+{
+    $path = dirname(__DIR__) . '/data/hide_out_players';
+    return is_file($path) && trim((string) file_get_contents($path)) === '1';
+}
+
+function set_hide_out_players(bool $hide): void
+{
+    $dir = dirname(__DIR__) . '/data';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+    $path = $dir . '/hide_out_players';
+    if ($hide) {
+        file_put_contents($path, '1');
+    } elseif (is_file($path)) {
+        unlink($path);
+    }
+}

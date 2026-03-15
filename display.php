@@ -49,6 +49,8 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 .small{font-size:1.1rem;color:#c8d3dd}
 .score-1,.score-2,.score-3,.score-4{color:#8df0a1}
 .score-5{color:#ff8a80}
+.leaderboard tr.active-player td{background:rgba(33,150,243,.25);border-left:4px solid #2196f3}
+.leaderboard tr.active-player .col-frozen,.leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3,.leaderboard tr.active-player .col-frozen-4,.leaderboard tr.active-player .col-frozen-5,.leaderboard tr.active-player .col-frozen-6{background:rgba(33,150,243,.35)}
 .paused-banner{position:fixed;top:0;left:0;right:0;background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 @media (max-width:1000px){.grid{grid-template-columns:1fr}.upnext{font-size:2.8rem}}
 </style>
@@ -74,6 +76,9 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 
 <?php
 $scoresByRound = player_scores_by_round((int) $t['id']);
+$displayPlayers = hide_out_players()
+    ? array_values(array_filter($state['players'], fn($p) => !(int)($p['is_eliminated'] ?? 0)))
+    : $state['players'];
 ?>
 <div class="card">
 <h2 style="margin-top:0">Leaderboard / Queue</h2>
@@ -91,11 +96,12 @@ $scoresByRound = player_scores_by_round((int) $t['id']);
 </tr>
 </thead>
 <tbody>
-<?php foreach ($state['players'] as $player):
+<?php foreach ($displayPlayers as $player):
     $pid = (int) $player['id'];
     $scores = $scoresByRound[$pid] ?? [];
+    $isActive = $current && (int)$current['id'] === $pid;
 ?>
-<tr>
+<tr<?= $isActive ? ' class="active-player"' : '' ?>>
 <td class="col-frozen"><?= h((string)$player['queue_position']) ?></td>
 <td class="col-frozen col-frozen-2"><?= h($player['display_name']) ?></td>
 <td class="col-frozen col-frozen-3"><?= h((string)$player['chips_remaining']) ?></td>

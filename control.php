@@ -17,6 +17,7 @@ $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
 $waitingForBreak = !empty($current) && empty($breakStartedAt);
 $isPaused = tournament_paused();
+$hideOut = hide_out_players();
 ?>
 <!doctype html>
 <html lang="en">
@@ -109,6 +110,9 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <button class="neutral" type="submit" style="background:#f57c00">Pause Tournament</button>
 </form>
 <?php endif; ?>
+<form method="post" action="api/toggle_hide_out.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<button class="neutral" type="submit"><?= $hideOut ? 'Show Out Players' : 'Hide Out Players' ?></button>
+</form>
 <form method="post" action="api/undo.php" onsubmit="return confirm('Undo last score?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Undo Last</button>
 </form>
