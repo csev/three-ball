@@ -65,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($tournament) {
             $players = active_players((int) $tournament['id']);
             if (count($players) > 0) {
+                shuffle($players);
                 start_turn((int) $tournament['id'], (int) $players[0]['id']);
                 redirect_to('control.php');
             }

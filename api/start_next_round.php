@@ -27,6 +27,7 @@ if (empty($active)) {
 
 set_round_complete(false);
 set_tournament_paused(false);
+shuffle($active);
 start_turn($tournamentId, (int) $active[0]['id']);
 header('Location: ../control.php');
 exit;

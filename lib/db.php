@@ -143,4 +143,17 @@ function migrate(PDO $pdo): void
             $pdo->prepare("UPDATE tournaments SET starting_first_five_round_pot = ? WHERE id = ?")->execute([$origin, $r['id']]);
         }
     }
+
+    // Add up_next_player_id (persisted so display doesn't re-randomize on refresh)
+    $cols = $pdo->query("PRAGMA table_info(tournaments)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasUpNext = false;
+    foreach ($cols as $c) {
+        if ($c['name'] === 'up_next_player_id') {
+            $hasUpNext = true;
+            break;
+        }
+    }
+    if (!$hasUpNext) {
+        $pdo->exec("ALTER TABLE tournaments ADD COLUMN up_next_player_id INTEGER DEFAULT NULL");
+    }
 }

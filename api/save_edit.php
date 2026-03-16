@@ -36,12 +36,17 @@ if (isset($_POST['current_player_id']) && $_POST['current_player_id'] !== '') {
     }
 }
 
+$upNextId = null;
+if ($currentPlayerId !== null) {
+    $upNextId = player_after_current_round($tournamentId, $currentCycle, $currentPlayerId);
+}
+
 $pdo = db();
 $pdo->beginTransaction();
 try {
-    // Update pot origins, current round, and current player
-    $stmt = $pdo->prepare('UPDATE tournaments SET starting_pot = ?, starting_first_five_round_pot = ?, current_cycle_number = ?, current_player_id = ?, break_started_at = NULL, current_turn_started_at = NULL, current_turn_expires_at = NULL WHERE id = ?');
-    $stmt->execute([$startingPot, $startingFirstFive, $currentCycle, $currentPlayerId, $tournamentId]);
+    // Update pot origins, current round, current player, and up next
+    $stmt = $pdo->prepare('UPDATE tournaments SET starting_pot = ?, starting_first_five_round_pot = ?, current_cycle_number = ?, current_player_id = ?, up_next_player_id = ?, break_started_at = NULL, current_turn_started_at = NULL, current_turn_expires_at = NULL WHERE id = ?');
+    $stmt->execute([$startingPot, $startingFirstFive, $currentCycle, $currentPlayerId, $upNextId, $tournamentId]);
 
     // Update First 5 $ and Main $ only (chips and in/out are computed from scores)
     foreach ($players as $player) {
