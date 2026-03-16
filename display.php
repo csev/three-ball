@@ -44,14 +44,13 @@ body{font-family:Arial,sans-serif;background:#081018;color:white;margin:0;paddin
 .leaderboard-wrap{overflow-x:auto;margin-top:.5rem}
 .leaderboard{width:max-content;border-collapse:collapse;font-size:1.7rem}
 .leaderboard th,.leaderboard td{padding:.6rem .5rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left;white-space:nowrap}
-.leaderboard .col-frozen,.leaderboard .col-frozen-2,.leaderboard .col-frozen-3,.leaderboard .col-frozen-4,.leaderboard .col-frozen-5,.leaderboard .col-frozen-6{position:sticky;background:#0d1520;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.3)}
-.leaderboard .col-frozen{left:0;min-width:2.5rem}
-.leaderboard .col-frozen-2{left:2.5rem;min-width:6rem}
-.leaderboard .col-frozen-3{left:8.5rem;min-width:2.5rem}
-.leaderboard .col-frozen-4{left:11rem;min-width:3.5rem}
-.leaderboard .col-frozen-5{left:14.5rem;min-width:3.5rem}
-.leaderboard .col-frozen-6{left:18rem;min-width:2.5rem}
+/* Only Player and Chips stay fixed when scrolling horizontally — solid bg so scrolled content doesn't bleed through */
+.leaderboard .col-frozen-2,.leaderboard .col-frozen-3{position:sticky;background-color:#0d1520;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.3);isolation:isolate;border-bottom:1px solid rgba(255,255,255,.12)}
+.leaderboard .col-frozen-2{left:0;min-width:6rem}
+.leaderboard .col-frozen-3{left:6rem;min-width:2.5rem}
 .leaderboard th.col-round{min-width:2.5rem;text-align:center}
+/* Remove top border to prevent double line at thead/tbody (only use border-bottom) */
+.leaderboard th,.leaderboard td{border-top:none}
 th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
 .out{color:#ff8a80}
 .small{font-size:1.25rem;color:#c8d3dd}
@@ -59,7 +58,9 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 .score-5{color:#ff8a80}
 .leaderboard tr.active-player td{background:rgba(33,150,243,.25)}
 .leaderboard tr.active-player .col-frozen,.leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3,.leaderboard tr.active-player .col-frozen-4,.leaderboard tr.active-player .col-frozen-5,.leaderboard tr.active-player .col-frozen-6{background:rgba(33,150,243,.35)}
-.leaderboard tr.up-next-player td.col-frozen-2{background:rgba(46,125,50,.5)}
+/* Sticky cols need solid backgrounds so scrolled content doesn't show through */
+.leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3{background:#1a3d5c}
+.leaderboard tr.up-next-player td.col-frozen-2{background:#1a4720}
 .paused-banner{position:fixed;top:0;left:0;right:0;background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .qr-wrap{display:flex;align-items:center}
 .qr-wrap img{width:260px;height:260px;background:white;padding:10px;border-radius:10px}
