@@ -3,7 +3,7 @@
 ## 1. Goal
 Build a simple website for a pub-hosted 3-ball chip tournament. The site must support:
 
-- fixed player queue
+- random player selection (who shoots next is picked from remaining players in round)
 - timed turns
 - score entry
 - automatic chip loss on score > 4
@@ -26,6 +26,8 @@ Fields:
 - chips_per_player
 - status (`setup`, `running`, `finished`)
 - current_player_id
+- up_next_player_id (persisted so display doesn't re-randomize on refresh)
+- break_started_at (set when runner taps Break; used for count-up timer)
 - current_turn_started_at
 - current_turn_expires_at
 - current_cycle_number
@@ -39,7 +41,7 @@ Fields:
 - tournament_id
 - display_name
 - queue_position
-- chips_remaining
+- chips_remaining (computed from turns: initial chips + sum of chip_delta, clamped at 0)
 - is_eliminated
 - eliminated_at
 - created_at
@@ -68,12 +70,12 @@ Fields:
 4. First active player becomes current player.
 5. Turn timer starts at 60 seconds.
 6. Runner enters either:
-   - score 1..9, or
+   - score 1..5, or
    - timeout / no-show
 7. Business rules are applied.
 8. If player reaches 0 chips, player is eliminated.
-9. Advance to next active player in queue.
-10. If end of queue is reached, wrap to first active player and increment cycle if needed.
+9. Advance to next player: randomly pick from active players who have not yet played this round.
+10. If all have played this round, increment cycle and randomly pick first player for next round (round complete; auto-pause).
 11. Repeat until only one player remains, or operator ends event manually.
 
 ## 4. Rules currently encoded
@@ -85,10 +87,9 @@ Fields:
 - If chips_remaining <= 0: player is marked eliminated.
 
 ### Queue rule
-- Queue is fixed by queue_position.
-- Current player always advances to next non-eliminated player.
+- Player order is random each round: from active (non-eliminated) players who have not yet played, pick randomly for current and up-next.
 - Eliminated players are skipped.
-- Queue wraps around.
+- When round completes, auto-pause; "Start Next Round" begins next cycle.
 
 ### Timer rule
 - Each turn has timer_seconds, default 60.
@@ -112,7 +113,7 @@ Must show:
 - up next player name
 - countdown timer
 - chips remaining for current player
-- score buttons (1,2,3,4,5,6,7,8,9)
+- score buttons (1,2,3,4,5)
 - timeout button
 - recent turn history
 
@@ -139,8 +140,7 @@ Deferred items:
 For now, payout logic should be recorded as notes or handled manually.
 
 ## 7. Suggested next Cursor tasks
-1. add undo-last-turn
-2. automate payout rules after clarifying exact semantics of “round” vs “cycle”
+1. automate payout rules after clarifying exact semantics of “round” vs “cycle”
 3. add manual pot adjustment buttons
 4. add player mobile page by QR code
 5. add operator PIN auth

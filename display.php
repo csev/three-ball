@@ -16,8 +16,11 @@ $breakStartedAt = $t['break_started_at'] ?? null;
 $isPaused = tournament_paused();
 $chipsPerPlayer = (int)($t['chips_per_player'] ?? 5);
 $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-$displayUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/display.php');
-$qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . rawurlencode($displayUrl);
+$requestUri = $_SERVER['REQUEST_URI'] ?? '/display.php';
+$baseUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $requestUri;
+$displayUrlForQr = $baseUrl . (strpos($requestUri, '?') !== false ? '&' : '?') . 'view=1';
+$showQrCode = !isset($_GET['view']) || $_GET['view'] !== '1';
+$isViewMode = isset($_GET['view']) && $_GET['view'] === '1';
 ?>
 <!doctype html>
 <html lang="en">
@@ -61,9 +64,18 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 .qr-wrap{display:flex;align-items:center}
 .qr-wrap img{width:260px;height:260px;background:white;padding:10px;border-radius:10px}
 @media (max-width:1000px){.grid{grid-template-columns:1fr}.upnext{font-size:2.8rem}}
+/* view=1: mobile phone – smaller header */
+body.view-mode{padding:0.75rem}
+body.view-mode .header{margin-bottom:0.75rem;gap:0.75rem}
+body.view-mode .title{font-size:1.6rem}
+body.view-mode .pot{font-size:1.2rem}
+body.view-mode .upnext{font-size:2.2rem}
+body.view-mode .upnext-secondary{font-size:1.2rem}
+body.view-mode .timer{font-size:1.8rem}
+body.view-mode .small{font-size:0.95rem}
 </style>
 </head>
-<body>
+<body<?= $isViewMode ? ' class="view-mode"' : '' ?>>
 <?php if ($isPaused): ?><div class="paused-banner">PAUSED</div><?php endif; ?>
 <div class="wrap" style="<?= $isPaused ? 'margin-top:5rem' : '' ?>">
 <div class="header">
@@ -86,7 +98,9 @@ $showUpNext = $upNext && !$atEndOfRound;
 <div class="upnext-secondary"><?= $showUpNext ? 'Up Next' : '' ?></div>
 <div class="upnext-secondary"><?= $showUpNext ? h($upNext['display_name']) : 'End of Round' ?></div>
 </div>
-<a href="<?= h($displayUrl) ?>" title="Open display"><img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=<?= rawurlencode($displayUrl) ?>" alt="QR: Display" width="260" height="260"></a>
+<?php if ($showQrCode): ?>
+<a href="<?= h($displayUrlForQr) ?>" title="Open display"><img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=<?= rawurlencode($displayUrlForQr) ?>" alt="QR: Display" width="260" height="260"></a>
+<?php endif; ?>
 </div>
 </div>
 

@@ -15,8 +15,8 @@ A lightweight PHP + SQLite starter for Mike's pub 3-ball tournament.
 
 ## Assumptions encoded so far
 
-- Players are in a fixed circular queue.
-- When the queue reaches the end, it wraps to the first remaining active player.
+- Players are randomly selected each turn from those who haven't played in the current round.
+- When a round completes, the next round starts with a random active player.
 - Each player starts with 5 chips.
 - Score `<= 4` keeps all chips.
 - Score `> 4` loses one chip.
@@ -41,7 +41,6 @@ Written to be boring and compatible: PHP 8.0+ should be fine.
 
 ## Next likely improvements
 
-- Undo last turn
 - Manual payout buttons / pot deductions
 - Player QR view
 - Better mobile styling

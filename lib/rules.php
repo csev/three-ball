@@ -188,24 +188,6 @@ function next_active_player_id(array $tournament): ?int
     return (int) $active[0]['id']; // Round complete; next round starts with random active
 }
 
-function second_active_player_id(array $tournament): ?int
-{
-    $tournamentId = (int) $tournament['id'];
-    $cycleNumber = (int) ($tournament['current_cycle_number'] ?? 1);
-    $remaining = remaining_to_shoot($tournamentId, $cycleNumber);
-    if (count($remaining) < 2) {
-        return null;
-    }
-
-    $nextId = next_active_player_id($tournament);
-    $others = array_values(array_filter($remaining, fn($p) => (int) $p['id'] !== $nextId));
-    if (empty($others)) {
-        return null;
-    }
-    shuffle($others);
-    return (int) $others[0]['id'];
-}
-
 function start_turn(int $tournamentId, int $playerId): void
 {
     $tournament = active_tournament();

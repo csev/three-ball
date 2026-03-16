@@ -2,12 +2,12 @@
   "project": {
     "name": "Three-Ball Pub Tournament",
     "stack": ["PHP", "SQLite", "Vanilla JS", "CSS"],
-    "goal": "Run a pub 3-ball tournament with timed turns, fixed queue rotation, chip elimination, and public leaderboard display."
+    "goal": "Run a pub 3-ball tournament with timed turns, random player selection per round, chip elimination, and public leaderboard display."
   },
   "rules": {
     "chips_per_player": 5,
     "timer_seconds": 60,
-    "queue_mode": "fixed_circular",
+    "queue_mode": "random_per_round",
     "score_rule": {
       "keep_chip_max_score": 4,
       "lose_chip_if_score_gt": 4
@@ -32,6 +32,7 @@
       "chips_per_player",
       "status",
       "current_player_id",
+      "up_next_player_id",
       "current_turn_started_at",
       "current_turn_expires_at",
       "current_cycle_number",
@@ -73,7 +74,7 @@
       "show current player",
       "show up next",
       "countdown timer",
-      "score buttons 1..9",
+      "score buttons 1..5",
       "timeout button",
       "recent history"
     ],
@@ -96,7 +97,6 @@
     "jackpot automation",
     "tie payout automation",
     "manual pot adjustment UI",
-    "undo",
     "authentication",
     "player qr view"
   ]
