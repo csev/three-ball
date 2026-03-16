@@ -50,7 +50,6 @@ function migrate(PDO $pdo): void
         queue_position INTEGER NOT NULL,
         chips_remaining INTEGER NOT NULL DEFAULT 5,
         is_eliminated INTEGER NOT NULL DEFAULT 0,
-        eliminated_at TEXT DEFAULT NULL,
         created_at TEXT NOT NULL,
         FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
     )");
@@ -95,19 +94,6 @@ function migrate(PDO $pdo): void
     }
     if (!$hasFirstFive) {
         $pdo->exec("ALTER TABLE tournaments ADD COLUMN first_five_round_pot INTEGER NOT NULL DEFAULT 0");
-    }
-
-    // Add wins (amount won) to players
-    $cols = $pdo->query("PRAGMA table_info(players)")->fetchAll(PDO::FETCH_ASSOC);
-    $hasWins = false;
-    foreach ($cols as $c) {
-        if ($c['name'] === 'wins') {
-            $hasWins = true;
-            break;
-        }
-    }
-    if (!$hasWins) {
-        $pdo->exec("ALTER TABLE players ADD COLUMN wins INTEGER NOT NULL DEFAULT 0");
     }
 
     // Add first_five_amount and main_pot_amount to players
@@ -155,5 +141,15 @@ function migrate(PDO $pdo): void
     }
     if (!$hasUpNext) {
         $pdo->exec("ALTER TABLE tournaments ADD COLUMN up_next_player_id INTEGER DEFAULT NULL");
+    }
+
+    // Drop legacy columns (wins, eliminated_at) - requires SQLite 3.35+
+    $cols = $pdo->query("PRAGMA table_info(players)")->fetchAll(PDO::FETCH_ASSOC);
+    $colNames = array_column($cols, 'name');
+    if (in_array('wins', $colNames, true)) {
+        $pdo->exec("ALTER TABLE players DROP COLUMN wins");
+    }
+    if (in_array('eliminated_at', $colNames, true)) {
+        $pdo->exec("ALTER TABLE players DROP COLUMN eliminated_at");
     }
 }
