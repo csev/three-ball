@@ -61,7 +61,7 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 /* Sticky cols need solid backgrounds so scrolled content doesn't show through */
 .leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3{background:#1a3d5c}
 .leaderboard tr.up-next-player td.col-frozen-2{background:#1a4720}
-.paused-banner{position:fixed;top:0;left:0;right:0;background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.paused-banner{background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .qr-wrap{display:flex;align-items:center}
 .qr-wrap img{width:260px;height:260px;background:white;padding:10px;border-radius:10px}
 @media (max-width:1000px){.grid{grid-template-columns:1fr}.upnext{font-size:2.8rem}}
@@ -78,7 +78,7 @@ body.view-mode .small{font-size:0.95rem}
 </head>
 <body<?= $isViewMode ? ' class="view-mode"' : '' ?>>
 <?php if ($isPaused): ?><div class="paused-banner">PAUSED</div><?php endif; ?>
-<div class="wrap" style="<?= $isPaused ? 'margin-top:5rem' : '' ?>">
+<div class="wrap">
 <div class="header">
 <div>
 <div class="title"><?= h($t['name']) ?></div>
