@@ -25,28 +25,12 @@ $startingPot = isset($_POST['starting_pot']) ? max(0, (int) $_POST['starting_pot
 $startingFirstFive = isset($_POST['starting_first_five_round_pot']) ? max(0, (int) $_POST['starting_first_five_round_pot']) : (int) ($tournament['starting_first_five_round_pot'] ?? $tournament['first_five_round_pot'] ?? 0);
 $currentCycle = isset($_POST['current_cycle_number']) ? max(1, min(15, (int) $_POST['current_cycle_number'])) : (int) ($tournament['current_cycle_number'] ?? 1);
 
-$currentPlayerId = null;
-if (isset($_POST['current_player_id']) && $_POST['current_player_id'] !== '') {
-    $posted = (int) $_POST['current_player_id'];
-    foreach ($players as $p) {
-        if ((int) $p['id'] === $posted) {
-            $currentPlayerId = $posted;
-            break;
-        }
-    }
-}
-
-$upNextId = null;
-if ($currentPlayerId !== null) {
-    $upNextId = player_after_current_round($tournamentId, $currentCycle, $currentPlayerId);
-}
-
 $pdo = db();
 $pdo->beginTransaction();
 try {
-    // Update pot origins, current round, current player, and up next
-    $stmt = $pdo->prepare('UPDATE tournaments SET starting_pot = ?, starting_first_five_round_pot = ?, current_cycle_number = ?, current_player_id = ?, up_next_player_id = ?, break_started_at = NULL, current_turn_started_at = NULL, current_turn_expires_at = NULL WHERE id = ?');
-    $stmt->execute([$startingPot, $startingFirstFive, $currentCycle, $currentPlayerId, $upNextId, $tournamentId]);
+    // Update pot origins and current round (current player and up next are managed by control/play flow)
+    $stmt = $pdo->prepare('UPDATE tournaments SET starting_pot = ?, starting_first_five_round_pot = ?, current_cycle_number = ?, break_started_at = NULL, current_turn_started_at = NULL, current_turn_expires_at = NULL WHERE id = ?');
+    $stmt->execute([$startingPot, $startingFirstFive, $currentCycle, $tournamentId]);
 
     // Update First 5 $ and Main $ only (chips and in/out are computed from scores)
     foreach ($players as $player) {
@@ -112,6 +96,16 @@ try {
                 $stmt->execute([$tournamentId, $pid, $r, $turnNum, $score, $resultType, $chipDelta, 'edited', now_utc()]);
             }
         }
+    }
+
+    // Persist computed chips and is_eliminated to players table
+    $initialChips = (int) ($tournament['chips_per_player'] ?? 5);
+    foreach ($players as $player) {
+        $pid = (int) $player['id'];
+        $chips = computed_chips($tournamentId, $pid, $initialChips);
+        $isEliminated = $chips <= 0 ? 1 : 0;
+        $stmt = $pdo->prepare('UPDATE players SET chips_remaining = ?, is_eliminated = ? WHERE id = ?');
+        $stmt->execute([$chips, $isEliminated, $pid]);
     }
 
     $pdo->commit();

@@ -101,32 +101,10 @@ button{padding:.7rem 1rem;border-radius:10px;border:1px solid #999;background:#f
 </style>
 </head>
 <body>
-<div class="card">
 <h1>Three-Ball Tournament Setup</h1>
 <?php if ($message): ?>
 <p><strong><?= h($message) ?></strong></p>
 <?php endif; ?>
-<form method="post" onsubmit="return confirm('Are you sure? This will replace the current tournament and all data.');">
-<input type="hidden" name="action" value="create">
-<label>Tournament Name</label>
-<input name="name" value="<?= h($formName) ?>">
-<label>Venue Name</label>
-<input name="venue_name" value="<?= h($formVenue) ?>">
-<label>Starting Pot</label>
-<input name="starting_pot" type="number" value="<?= (int)$formStartingPot ?>">
-<label>First <?= (int)$formChipsPerPlayer ?> Round Pot (before guaranteed rounds)</label>
-<input name="first_five_round_pot" type="number" value="<?= (int)$formFirstFiveRoundPot ?>">
-<label>Timer Seconds</label>
-<input name="timer_seconds" type="number" value="<?= (int)$formTimerSeconds ?>">
-<label>Chips Per Player</label>
-<input name="chips_per_player" type="number" value="<?= (int)$formChipsPerPlayer ?>">
-<label>Players (one per line)</label>
-<textarea name="players"><?= h($formPlayers) ?></textarea>
-<div class="actions">
-<button type="submit">Create / Replace Tournament</button>
-</div>
-</form>
-</div>
 
 <div class="card">
 <h2>Start / Reset</h2>
@@ -154,5 +132,29 @@ button{padding:.7rem 1rem;border-radius:10px;border:1px solid #999;background:#f
 <p class="small"><a href="control.php">Control screen</a> · <a href="display.php">Display screen</a></p>
 </div>
 <?php endif; ?>
+
+<div class="card">
+<h2>Create / Replace Tournament</h2>
+<form method="post" onsubmit="return confirm('Are you sure? This will replace the current tournament and all data.');">
+<input type="hidden" name="action" value="create">
+<label>Tournament Name</label>
+<input name="name" value="<?= h($formName) ?>">
+<label>Venue Name</label>
+<input name="venue_name" value="<?= h($formVenue) ?>">
+<label>Starting Pot</label>
+<input name="starting_pot" type="number" value="<?= (int)$formStartingPot ?>">
+<label>First <?= (int)$formChipsPerPlayer ?> Round Pot (before guaranteed rounds)</label>
+<input name="first_five_round_pot" type="number" value="<?= (int)$formFirstFiveRoundPot ?>">
+<label>Timer Seconds</label>
+<input name="timer_seconds" type="number" value="<?= (int)$formTimerSeconds ?>">
+<label>Chips Per Player</label>
+<input name="chips_per_player" type="number" value="<?= (int)$formChipsPerPlayer ?>">
+<label>Players (one per line)</label>
+<textarea name="players"><?= h($formPlayers) ?></textarea>
+<div class="actions">
+<button type="submit">Create / Replace Tournament</button>
+</div>
+</form>
+</div>
 </body>
 </html>

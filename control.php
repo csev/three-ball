@@ -121,13 +121,10 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <form method="post" action="api/toggle_hide_out.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit"><?= $hideOut ? 'Show Out Players' : 'Hide Out Players' ?></button>
 </form>
-<form method="post" action="api/stop.php" onsubmit="return confirm('Are you sure you want to stop the tournament?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
-<button class="neutral" type="submit">Stop Tournament</button>
-</form>
 <form method="get" action="edit.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Edit</button>
 </form>
-<form method="get" action="setup.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<form method="get" action="setup.php" onsubmit="return confirm('Are you sure you want to go to Setup?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Setup</button>
 </form>
 <form method="get" action="display.php" target="_blank" style="display:inline-block;margin-top:1rem">
