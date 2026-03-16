@@ -18,6 +18,7 @@ $breakStartedAt = $t['break_started_at'] ?? null;
 $waitingForBreak = !empty($current) && empty($breakStartedAt);
 $isPaused = tournament_paused();
 $hideOut = hide_out_players();
+$chipsPerPlayer = (int)($t['chips_per_player'] ?? 5);
 ?>
 <!doctype html>
 <html lang="en">
@@ -90,7 +91,7 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <?php else: ?>
 <div class="pot-row" style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #333">
 <span class="pot-display" style="font-size:1.5rem;font-weight:bold;color:#8df0a1">Pot: $<?= h((string)($state['computed_main_pot'] ?? $t['current_pot'])) ?></span>
-<span class="pot-display small" style="font-size:1.1rem;color:#90caf9">First 5: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></span>
+<span class="pot-display small" style="font-size:1.1rem;color:#90caf9">First <?= $chipsPerPlayer ?>: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></span>
 </div>
 <h2>Enter Score</h2>
 <div class="buttons">

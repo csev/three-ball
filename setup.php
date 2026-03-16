@@ -113,7 +113,7 @@ button{padding:.7rem 1rem;border-radius:10px;border:1px solid #999;background:#f
 <input name="venue_name" value="<?= h($formVenue) ?>">
 <label>Starting Pot</label>
 <input name="starting_pot" type="number" value="<?= (int)$formStartingPot ?>">
-<label>First Five Round Pot</label>
+<label>First <?= (int)$formChipsPerPlayer ?> Round Pot (before guaranteed rounds)</label>
 <input name="first_five_round_pot" type="number" value="<?= (int)$formFirstFiveRoundPot ?>">
 <label>Timer Seconds</label>
 <input name="timer_seconds" type="number" value="<?= (int)$formTimerSeconds ?>">

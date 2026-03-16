@@ -15,6 +15,7 @@ if (!$state) {
 
 $t = $state['tournament'];
 $players = $state['players'];
+$chipsPerPlayer = (int)($t['chips_per_player'] ?? 5);
 $scoresByRound = player_scores_by_round((int) $t['id']);
 ?>
 <!doctype html>
@@ -54,13 +55,13 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <body>
 <div class="wrap">
 <h1>Edit Tournament — <?= h($t['name']) ?></h1>
-<p style="color:#999;font-size:.9rem">Edit chips, First 5 $, Main $, and round scores. Chips = 0 means OUT. Scores: 1–5 or TO (timeout). Pot origins set the starting pool; computed pot = origin minus total awarded.</p>
+<p style="color:#999;font-size:.9rem">Edit First <?= $chipsPerPlayer ?> $, Main $, and round scores. Chips and IN/OUT are computed from scores (initial chips minus 5s/timeouts). Scores: 1–5 or TO (timeout). Pot origins set the starting pool; computed pot = origin minus total awarded.</p>
 
 <form method="post" action="api/save_edit.php">
 <div class="card" style="margin-bottom:1rem">
 <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:center;padding-bottom:1rem;border-bottom:1px solid #333">
 <label style="display:flex;align-items:center;gap:.5rem">Main Pot Origin: $<input type="number" name="starting_pot" min="0" value="<?= (int)($t['starting_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
-<label style="display:flex;align-items:center;gap:.5rem">First 5 Pot Origin: $<input type="number" name="starting_first_five_round_pot" min="0" value="<?= (int)($t['starting_first_five_round_pot'] ?? $t['first_five_round_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
+<label style="display:flex;align-items:center;gap:.5rem">First <?= $chipsPerPlayer ?> Pot Origin: $<input type="number" name="starting_first_five_round_pot" min="0" value="<?= (int)($t['starting_first_five_round_pot'] ?? $t['first_five_round_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
 <label style="display:flex;align-items:center;gap:.5rem">Current Round: <input type="number" name="current_cycle_number" min="1" max="15" value="<?= (int)($t['current_cycle_number'] ?? 1) ?>" style="width:4rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
 <label style="display:flex;align-items:center;gap:.5rem">Current Player: <select name="current_player_id" style="padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px;min-width:10rem">
 <option value="">— None —</option>
@@ -78,7 +79,7 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <th class="col-frozen">Pos</th>
 <th class="col-frozen col-frozen-2">Player</th>
 <th class="col-frozen col-frozen-3">Chips</th>
-<th class="col-frozen col-frozen-4">First 5 $</th>
+<th class="col-frozen col-frozen-4">First <?= $chipsPerPlayer ?> $</th>
 <th class="col-frozen col-frozen-5">Main $</th>
 <th class="col-frozen col-frozen-6">Status</th>
 <?php for ($r = 1; $r <= 15; $r++): ?><th class="col-round"><?= $r ?></th><?php endfor; ?>
@@ -94,7 +95,7 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <tr>
 <td class="col-frozen"><?= h((string)$player['queue_position']) ?></td>
 <td class="col-frozen col-frozen-2"><?= h($player['display_name']) ?></td>
-<td class="col-frozen col-frozen-3"><input type="number" name="chips_<?= $pid ?>" class="chips" min="0" value="<?= $chips ?>" data-pid="<?= $pid ?>"></td>
+<td class="col-frozen col-frozen-3"><?= $chips ?></td>
 <td class="col-frozen col-frozen-4"><input type="number" name="first_five_amount_<?= $pid ?>" class="pot-amt" min="0" value="<?= (int)($player['first_five_amount'] ?? 0) ?>"></td>
 <td class="col-frozen col-frozen-5"><input type="number" name="main_pot_amount_<?= $pid ?>" class="pot-amt" min="0" value="<?= (int)($player['main_pot_amount'] ?? 0) ?>"></td>
 <td class="col-frozen col-frozen-6 status-cell <?= $isOut ? 'out' : '' ?>" data-pid="<?= $pid ?>"><?= $chips > 0 ? 'IN' : 'OUT' ?></td>
@@ -114,16 +115,5 @@ button.primary:hover,a.btn:hover{opacity:.9}
 </div>
 </form>
 </div>
-<script>
-document.querySelectorAll('input.chips').forEach(function(inp) {
-  inp.addEventListener('input', function() {
-    var pid = this.dataset.pid;
-    var val = parseInt(this.value, 10) || 0;
-    var cell = document.querySelector('.status-cell[data-pid="' + pid + '"]');
-    if (cell) cell.textContent = val > 0 ? 'IN' : 'OUT';
-    if (cell) cell.classList.toggle('out', val <= 0);
-  });
-});
-</script>
 </body>
 </html>

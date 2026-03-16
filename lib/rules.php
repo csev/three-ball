@@ -14,9 +14,8 @@ function all_players(int $tournamentId): array
 
 function active_players(int $tournamentId): array
 {
-    $stmt = db()->prepare('SELECT * FROM players WHERE tournament_id = ? AND is_eliminated = 0 ORDER BY queue_position ASC, id ASC');
-    $stmt->execute([$tournamentId]);
-    return $stmt->fetchAll();
+    $all = players_with_computed($tournamentId);
+    return array_values(array_filter($all, fn($p) => (int)($p['is_eliminated'] ?? 0) === 0));
 }
 
 function find_player(int $playerId): ?array
@@ -51,7 +50,33 @@ function player_scores_by_round(int $tournamentId): array
     return $out;
 }
 
-/** Returns [main_pot => int, first_five_pot => int] computed as origin minus sum of amounts awarded in edit screen */
+/** Chips = initial (from setup) minus count of scores 5+ or timeout. Min 0. OUT when 0. */
+function computed_chips(int $tournamentId, int $playerId, int $initialChips): int
+{
+    $stmt = db()->prepare('SELECT COALESCE(SUM(chip_delta), 0) FROM turns WHERE tournament_id = ? AND player_id = ?');
+    $stmt->execute([$tournamentId, $playerId]);
+    $delta = (int) $stmt->fetchColumn();
+    return max(0, $initialChips + $delta);
+}
+
+/** Returns players with chips_remaining and is_eliminated computed from turns (initial chips minus 5s/timeouts). */
+function players_with_computed(int $tournamentId): array
+{
+    $tournament = active_tournament();
+    $initialChips = $tournament && (int) $tournament['id'] === $tournamentId
+        ? (int) ($tournament['chips_per_player'] ?? 5)
+        : 5;
+
+    $players = all_players($tournamentId);
+    foreach ($players as &$p) {
+        $chips = computed_chips($tournamentId, (int) $p['id'], $initialChips);
+        $p['chips_remaining'] = $chips;
+        $p['is_eliminated'] = $chips <= 0 ? 1 : 0;
+    }
+    return $players;
+}
+
+/** Returns [main_pot => int, first_five_pot => int] computed as origin minus sum of amounts awarded. */
 function computed_pots(int $tournamentId): array
 {
     $stmt = db()->prepare('SELECT starting_pot, COALESCE(starting_first_five_round_pot, first_five_round_pot) AS first_five_origin FROM tournaments WHERE id = ?');
@@ -191,19 +216,6 @@ function start_turn(int $tournamentId, int $playerId): void
     ]);
 }
 
-function maybe_eliminate_player(int $playerId): void
-{
-    $player = find_player($playerId);
-    if (!$player) {
-        return;
-    }
-
-    if ((int) $player['chips_remaining'] <= 0 && (int) $player['is_eliminated'] === 0) {
-        $stmt = db()->prepare('UPDATE players SET is_eliminated = 1, eliminated_at = ? WHERE id = ?');
-        $stmt->execute([now_utc(), $playerId]);
-    }
-}
-
 function advance_queue(int $tournamentId): void
 {
     $tournament = active_tournament();
@@ -254,10 +266,6 @@ function apply_turn_result(int $tournamentId, int $playerId, ?int $score, string
             $chipDelta = -1;
         }
 
-        $newChips = (int) $player['chips_remaining'] + $chipDelta;
-        $stmt = $pdo->prepare('UPDATE players SET chips_remaining = ? WHERE id = ?');
-        $stmt->execute([$newChips, $playerId]);
-
         $turnNumber = total_turns($tournamentId) + 1;
         $stmt = $pdo->prepare('INSERT INTO turns (tournament_id, player_id, cycle_number, turn_number, score, result_type, chip_delta, payout_delta, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
@@ -284,7 +292,6 @@ function apply_turn_result(int $tournamentId, int $playerId, ?int $score, string
         throw $e;
     }
 
-    maybe_eliminate_player($playerId);
     advance_queue($tournamentId);
 }
 
@@ -296,10 +303,16 @@ function tournament_state(): ?array
     }
 
     $tournamentId = (int) $tournament['id'];
-    $players = all_players($tournamentId);
+    $players = players_with_computed($tournamentId);
     $cycleNumber = (int) ($tournament['current_cycle_number'] ?? 1);
+    $initialChips = (int) ($tournament['chips_per_player'] ?? 5);
 
     $currentPlayer = !empty($tournament['current_player_id']) ? find_player((int) $tournament['current_player_id']) : null;
+    if ($currentPlayer) {
+        $chips = computed_chips($tournamentId, (int) $currentPlayer['id'], $initialChips);
+        $currentPlayer['chips_remaining'] = $chips;
+        $currentPlayer['is_eliminated'] = $chips <= 0 ? 1 : 0;
+    }
     if (!$currentPlayer || (int) ($currentPlayer['is_eliminated'] ?? 0) === 1) {
         // Stored current is missing or eliminated - derive from round (first active who hasn't played)
         $effectiveCurrentId = next_player_for_current_round($tournamentId, $cycleNumber);
@@ -308,6 +321,11 @@ function tournament_state(): ?array
             $effectiveCurrentId = !empty($active) ? (int) $active[0]['id'] : null;
         }
         $currentPlayer = $effectiveCurrentId ? find_player($effectiveCurrentId) : null;
+        if ($currentPlayer) {
+            $chips = computed_chips($tournamentId, (int) $currentPlayer['id'], $initialChips);
+            $currentPlayer['chips_remaining'] = $chips;
+            $currentPlayer['is_eliminated'] = $chips <= 0 ? 1 : 0;
+        }
     }
 
     $upNext = null;

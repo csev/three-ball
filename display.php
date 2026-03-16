@@ -14,6 +14,7 @@ $current = $state['current_player'];
 $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
 $isPaused = tournament_paused();
+$chipsPerPlayer = (int)($t['chips_per_player'] ?? 5);
 $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
 $displayUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/display.php');
 $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . rawurlencode($displayUrl);
@@ -67,7 +68,7 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 <div>
 <div class="title"><?= h($t['name']) ?></div>
 <div class="pot">Current Pot: $<?= h((string)($state['computed_main_pot'] ?? $t['current_pot'])) ?></div>
-<div class="pot">First 5 Pot: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></div>
+<div class="pot">First <?= $chipsPerPlayer ?> Pot: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></div>
 <div class="small">Current Round: <?= h((string)($t['current_cycle_number'] ?? 1)) ?></div>
 </div>
 <div class="qr-wrap" style="gap:1.5rem">
@@ -97,7 +98,7 @@ $displayPlayers = hide_out_players()
 <th class="col-frozen">Pos</th>
 <th class="col-frozen col-frozen-2">Player</th>
 <th class="col-frozen col-frozen-3">Chips</th>
-<th class="col-frozen col-frozen-4">First 5 $</th>
+<th class="col-frozen col-frozen-4">First <?= $chipsPerPlayer ?> $</th>
 <th class="col-frozen col-frozen-5">Main $</th>
 <th class="col-frozen col-frozen-6">Status</th>
 <?php for ($r = 1; $r <= 15; $r++): ?><th class="col-round"><?= $r ?></th><?php endfor; ?>

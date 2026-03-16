@@ -19,7 +19,7 @@ if (!$tournament) {
 }
 
 $tournamentId = (int) $tournament['id'];
-$players = all_players($tournamentId);
+$players = players_with_computed($tournamentId);
 
 $startingPot = isset($_POST['starting_pot']) ? max(0, (int) $_POST['starting_pot']) : (int) $tournament['starting_pot'];
 $startingFirstFive = isset($_POST['starting_first_five_round_pot']) ? max(0, (int) $_POST['starting_first_five_round_pot']) : (int) ($tournament['starting_first_five_round_pot'] ?? $tournament['first_five_round_pot'] ?? 0);
@@ -43,21 +43,16 @@ try {
     $stmt = $pdo->prepare('UPDATE tournaments SET starting_pot = ?, starting_first_five_round_pot = ?, current_cycle_number = ?, current_player_id = ?, break_started_at = NULL, current_turn_started_at = NULL, current_turn_expires_at = NULL WHERE id = ?');
     $stmt->execute([$startingPot, $startingFirstFive, $currentCycle, $currentPlayerId, $tournamentId]);
 
-    // Update chips for each player
+    // Update First 5 $ and Main $ only (chips and in/out are computed from scores)
     foreach ($players as $player) {
         $pid = (int) $player['id'];
-        $chips = isset($_POST['chips_' . $pid]) ? (int) $_POST['chips_' . $pid] : (int) $player['chips_remaining'];
-        $chips = max(0, $chips);
-        $isEliminated = $chips <= 0 ? 1 : 0;
-        $eliminatedAt = $isEliminated ? now_utc() : null;
-
         $firstFiveAmount = isset($_POST['first_five_amount_' . $pid]) ? (int) $_POST['first_five_amount_' . $pid] : (int) ($player['first_five_amount'] ?? 0);
         $firstFiveAmount = max(0, $firstFiveAmount);
         $mainPotAmount = isset($_POST['main_pot_amount_' . $pid]) ? (int) $_POST['main_pot_amount_' . $pid] : (int) ($player['main_pot_amount'] ?? 0);
         $mainPotAmount = max(0, $mainPotAmount);
 
-        $stmt = $pdo->prepare('UPDATE players SET chips_remaining = ?, is_eliminated = ?, eliminated_at = ?, first_five_amount = ?, main_pot_amount = ? WHERE id = ?');
-        $stmt->execute([$chips, $isEliminated, $eliminatedAt, $firstFiveAmount, $mainPotAmount, $pid]);
+        $stmt = $pdo->prepare('UPDATE players SET first_five_amount = ?, main_pot_amount = ? WHERE id = ?');
+        $stmt->execute([$firstFiveAmount, $mainPotAmount, $pid]);
     }
 
     // Fetch existing turns: (player_id, cycle_number) => turn row
