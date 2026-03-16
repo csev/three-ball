@@ -49,6 +49,7 @@ body{font-family:Arial,sans-serif;background:#081018;color:white;margin:0;paddin
 .leaderboard .col-frozen-2{left:0;min-width:6rem}
 .leaderboard .col-frozen-3{left:6rem;min-width:2.5rem}
 .leaderboard th.col-round{min-width:2.5rem;text-align:center}
+.leaderboard td.col-round.lowest{color:gold}
 /* Remove top border to prevent double line at thead/tbody (only use border-bottom) */
 .leaderboard th,.leaderboard td{border-top:none}
 th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
@@ -110,6 +111,18 @@ $scoresByRound = player_scores_by_round((int) $t['id']);
 $displayPlayers = hide_out_players()
     ? array_values(array_filter($state['players'], fn($p) => !(int)($p['is_eliminated'] ?? 0)))
     : $state['players'];
+/* Per-round min score for gold highlighting (only numeric 1–5 count) */
+$minByRound = [];
+for ($r = 1; $r <= 15; $r++) {
+    $scoresInRound = [];
+    foreach ($displayPlayers as $player) {
+        $val = $scoresByRound[(int)$player['id']][$r] ?? '';
+        if ($val !== '' && $val !== 'TO' && ctype_digit((string)$val)) {
+            $scoresInRound[] = (int) $val;
+        }
+    }
+    $minByRound[$r] = $scoresInRound ? min($scoresInRound) : null;
+}
 ?>
 <div class="card">
 <h2 style="margin-top:0">Leaderboard / Queue</h2>
@@ -146,7 +159,8 @@ foreach ($displayPlayers as $player):
 <?php for ($r = 1; $r <= 15; $r++):
     $val = $scores[$r] ?? '';
     $scoreClass = in_array((string)$val, ['1','2','3']) ? ' score-1' : ((string)$val === '4' ? ' score-4' : ((string)$val === '5' ? ' score-5' : ''));
-?><td class="col-round<?= $scoreClass ?>"><?= h($val) ?></td>
+    $isLowest = $minByRound[$r] !== null && $val !== '' && $val !== 'TO' && ctype_digit((string)$val) && (int)$val === $minByRound[$r];
+?><td class="col-round<?= $scoreClass ?><?= $isLowest ? ' lowest' : '' ?>"><?= h($val) ?></td>
 <?php endfor; ?>
 </tr>
 <?php endforeach; ?>
