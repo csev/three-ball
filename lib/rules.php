@@ -132,6 +132,24 @@ function next_player_for_current_round(int $tournamentId, int $cycleNumber): ?in
     return null; // Everyone has played this round
 }
 
+/** True if current player is the last to shoot this round (after them, round ends). */
+function is_current_last_in_round(int $tournamentId, int $cycleNumber, int $currentPlayerId): bool
+{
+    $active = active_players($tournamentId);
+    $stmt = db()->prepare('SELECT player_id FROM turns WHERE tournament_id = ? AND cycle_number = ?');
+    $stmt->execute([$tournamentId, $cycleNumber]);
+    $playedIds = array_map('intval', array_column($stmt->fetchAll(), 'player_id'));
+
+    $remaining = [];
+    foreach ($active as $p) {
+        $pid = (int) $p['id'];
+        if (!in_array($pid, $playedIds, true)) {
+            $remaining[] = $pid;
+        }
+    }
+    return count($remaining) === 1 && (int) ($remaining[0] ?? 0) === $currentPlayerId;
+}
+
 /** Returns player id after $currentPlayerId in round order (who shoots after current). Null if current is last this round. */
 function player_after_current_round(int $tournamentId, int $cycleNumber, int $currentPlayerId): ?int
 {
@@ -234,11 +252,14 @@ function advance_queue(int $tournamentId): void
     $nextId = next_player_for_current_round($tournamentId, $cycleNumber);
 
     if ($nextId === null) {
-        // Round complete: everyone has played. Increment cycle and start next round with first active.
+        // Round complete: everyone has played. Auto-pause so folks can get paid, double-check scores.
         $cycleNumber = min(15, $cycleNumber + 1);
-        $stmt = db()->prepare('UPDATE tournaments SET current_cycle_number = ? WHERE id = ?');
-        $stmt->execute([$cycleNumber, $tournamentId]);
-        $nextId = (int) $active[0]['id'];
+        $firstActiveId = (int) $active[0]['id'];
+        $stmt = db()->prepare('UPDATE tournaments SET current_cycle_number = ?, current_player_id = ?, break_started_at = NULL, current_turn_started_at = NULL, current_turn_expires_at = NULL WHERE id = ?');
+        $stmt->execute([$cycleNumber, $firstActiveId, $tournamentId]);
+        set_tournament_paused(true);
+        set_round_complete(true);
+        return;
     }
 
     start_turn($tournamentId, $nextId);

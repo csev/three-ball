@@ -17,8 +17,12 @@ $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
 $waitingForBreak = !empty($current) && empty($breakStartedAt);
 $isPaused = tournament_paused();
+$roundComplete = round_complete();
 $hideOut = hide_out_players();
 $chipsPerPlayer = (int)($t['chips_per_player'] ?? 5);
+$upNext = $state['up_next'] ?? null;
+$atEndOfRound = $current && is_current_last_in_round((int)$t['id'], (int)($t['current_cycle_number'] ?? 1), (int)$current['id']);
+$upNextLabel = $upNext && !$atEndOfRound ? h($upNext['display_name']) : 'End of Round';
 ?>
 <!doctype html>
 <html lang="en">
@@ -67,8 +71,7 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <div>
 <div class="small"><?= h($t['name']) ?></div>
 <div class="big"><?= h($current['display_name'] ?? 'No current player') ?></div>
-<div>Chips: <?= h((string)($current['chips_remaining'] ?? '0')) ?></div>
-<div>Up next: <?= h($state['up_next']['display_name'] ?? '—') ?></div>
+<div>Up next: <?= $upNextLabel ?></div>
 </div>
 <div class="timer" id="timer">--</div>
 </div>
@@ -102,7 +105,11 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 </form>
 <?php endforeach; ?>
 <?php endif; ?>
-<?php if ($isPaused): ?>
+<?php if ($isPaused && $roundComplete): ?>
+<form method="post" action="api/start_next_round.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
+<button class="neutral" type="submit" style="background:#2e7d32">Start Next Round</button>
+</form>
+<?php elseif ($isPaused): ?>
 <form method="post" action="api/resume.php" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit" style="background:#2e7d32">Resume Tournament</button>
 </form>

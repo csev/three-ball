@@ -74,3 +74,24 @@ function set_hide_out_players(bool $hide): void
         unlink($path);
     }
 }
+
+/** Set when a round completes (auto-pause). Cleared when Start Next Round is clicked. */
+function round_complete(): bool
+{
+    $path = dirname(__DIR__) . '/data/round_complete';
+    return is_file($path) && trim((string) file_get_contents($path)) === '1';
+}
+
+function set_round_complete(bool $complete): void
+{
+    $dir = dirname(__DIR__) . '/data';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+    $path = $dir . '/round_complete';
+    if ($complete) {
+        file_put_contents($path, '1');
+    } elseif (is_file($path)) {
+        unlink($path);
+    }
+}

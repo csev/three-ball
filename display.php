@@ -55,6 +55,8 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 .score-5{color:#ff8a80}
 .leaderboard tr.active-player td{background:rgba(33,150,243,.25)}
 .leaderboard tr.active-player .col-frozen,.leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3,.leaderboard tr.active-player .col-frozen-4,.leaderboard tr.active-player .col-frozen-5,.leaderboard tr.active-player .col-frozen-6{background:rgba(33,150,243,.35)}
+.leaderboard tr.up-next-player td{background:rgba(46,125,50,.35)}
+.leaderboard tr.up-next-player .col-frozen,.leaderboard tr.up-next-player .col-frozen-2,.leaderboard tr.up-next-player .col-frozen-3,.leaderboard tr.up-next-player .col-frozen-4,.leaderboard tr.up-next-player .col-frozen-5,.leaderboard tr.up-next-player .col-frozen-6{background:rgba(46,125,50,.45)}
 .paused-banner{position:fixed;top:0;left:0;right:0;background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .qr-wrap{display:flex;align-items:center}
 .qr-wrap img{width:260px;height:260px;background:white;padding:10px;border-radius:10px}
@@ -71,12 +73,17 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 <div class="pot">First <?= $chipsPerPlayer ?> Pot: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></div>
 <div class="small">Current Round: <?= h((string)($t['current_cycle_number'] ?? 1)) ?></div>
 </div>
+<?php
+$upNext = $state['up_next'] ?? null;
+$atEndOfRound = $current && is_current_last_in_round((int)$t['id'], (int)($t['current_cycle_number'] ?? 1), (int)$current['id']);
+$showUpNext = $upNext && !$atEndOfRound;
+?>
 <div class="qr-wrap" style="gap:1.5rem">
 <div>
 <div class="small">Now Shooting</div>
 <div class="upnext"><?= h($current['display_name'] ?? 'Waiting...') ?></div>
-<div class="small">Up Next</div>
-<div class="upnext"><?= h($state['up_next']['display_name'] ?? '—') ?></div>
+<div class="small"><?= $showUpNext ? 'Up Next' : '' ?></div>
+<div class="upnext"><?= $showUpNext ? h($upNext['display_name']) : 'End of Round' ?></div>
 <div class="timer" id="timer">--</div>
 </div>
 <a href="<?= h($displayUrl) ?>" title="Open display"><img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=<?= rawurlencode($displayUrl) ?>" alt="QR: Display" width="260" height="260"></a>
@@ -105,12 +112,16 @@ $displayPlayers = hide_out_players()
 </tr>
 </thead>
 <tbody>
-<?php foreach ($displayPlayers as $player):
+<?php
+$upNextForRow = $showUpNext ? $upNext : null;
+foreach ($displayPlayers as $player):
     $pid = (int) $player['id'];
     $scores = $scoresByRound[$pid] ?? [];
     $isActive = $current && (int)$current['id'] === $pid;
+    $isUpNext = $upNextForRow && (int)$upNextForRow['id'] === $pid;
+    $rowClass = $isActive ? 'active-player' : ($isUpNext ? 'up-next-player' : '');
 ?>
-<tr<?= $isActive ? ' class="active-player"' : '' ?>>
+<tr<?= $rowClass ? ' class="' . $rowClass . '"' : '' ?>>
 <td class="col-frozen"><?= h((string)$player['queue_position']) ?></td>
 <td class="col-frozen col-frozen-2"><?= h($player['display_name']) ?></td>
 <td class="col-frozen col-frozen-3"><?= h((string)$player['chips_remaining']) ?></td>
