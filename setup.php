@@ -129,7 +129,7 @@ button{padding:.7rem 1rem;border-radius:10px;border:1px solid #999;background:#f
 <li><?= h($player['display_name']) ?> — chips: <?= h((string)$player['chips_remaining']) ?><?= (int)$player['is_eliminated'] ? ' (out)' : '' ?></li>
 <?php endforeach; ?>
 </ol>
-<p class="small"><a href="control.php">Control screen</a> · <a href="display.php">Display screen</a></p>
+<p class="small"><a href="control.php">Control screen</a> · <a href="./">Display screen</a></p>
 </div>
 <?php endif; ?>
 

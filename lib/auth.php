@@ -4,19 +4,34 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
 
-const AUTH_SECRET = '42';
+/** Optional project-root config.php may set this global (string). If missing or empty, falls back to "42". */
+$THREE_BALL_AUTH_SECRET = '42';
+$configPath = dirname(__DIR__) . '/config.php';
+if (is_file($configPath)) {
+    require $configPath;
+}
+if (!isset($THREE_BALL_AUTH_SECRET) || !is_string($THREE_BALL_AUTH_SECRET) || $THREE_BALL_AUTH_SECRET === '') {
+    $THREE_BALL_AUTH_SECRET = '42';
+}
+
 const AUTH_COOKIE = 'threeball_key';
 const AUTH_COOKIE_HOURS = 24;
 
+function auth_secret(): string
+{
+    global $THREE_BALL_AUTH_SECRET;
+    return $THREE_BALL_AUTH_SECRET;
+}
+
 function auth_valid(): bool
 {
-    return isset($_COOKIE[AUTH_COOKIE]) && $_COOKIE[AUTH_COOKIE] === AUTH_SECRET;
+    return isset($_COOKIE[AUTH_COOKIE]) && $_COOKIE[AUTH_COOKIE] === auth_secret();
 }
 
 function auth_set_cookie(): void
 {
     $expires = time() + (AUTH_COOKIE_HOURS * 3600);
-    setcookie(AUTH_COOKIE, AUTH_SECRET, [
+    setcookie(AUTH_COOKIE, auth_secret(), [
         'expires' => $expires,
         'path' => '/',
         'httponly' => true,
@@ -33,7 +48,7 @@ function require_auth(string $redirectTo): void
     $error = '';
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unlock_code'])) {
         $code = trim((string) ($_POST['unlock_code'] ?? ''));
-        if ($code === AUTH_SECRET) {
+        if ($code === auth_secret()) {
             auth_set_cookie();
             header('Location: ' . $redirectTo);
             exit;

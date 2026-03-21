@@ -127,7 +127,7 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <form method="get" action="setup.php" onsubmit="return confirm('Are you sure you want to go to Setup?');" style="display:inline-block;margin-right:.75rem;margin-top:1rem">
 <button class="neutral" type="submit">Setup</button>
 </form>
-<form method="get" action="display.php" target="_blank" style="display:inline-block;margin-top:1rem">
+<form method="get" action="./" target="_blank" style="display:inline-block;margin-top:1rem">
 <button class="neutral" type="submit">Public Display</button>
 </form>
 </div>

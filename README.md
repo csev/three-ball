@@ -1,6 +1,10 @@
 Three-Ball-Pool Tournament
 ==========================
 
+## Configuration
+
+Copy `config-dist.php` to `config.php` in the project root and set `$THREE_BALL_AUTH_SECRET` to the code operators use to unlock the control screen (cookie value). If `config.php` is missing, the app defaults to `42`. The real `config.php` is listed in `.gitignore` so it is not committed.
+
 Mike owns a pub and they wanted to do a memorial three-ball challenge for a veteran that passed away.  Mike and Chuck play pickup hockey every
 Thursday night in East Lansing, MI.  On March 5, 2026 before the hockey game started, Mike came over to Chuck at center ice and asked Chuck to write a desktop
 application to run a three-ball https://en.wikipedia.org/wiki/Three-ball pool tournament for a tournament on March 15.

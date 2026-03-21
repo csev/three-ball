@@ -18,6 +18,25 @@ function redirect_to(string $url): void
     exit;
 }
 
+/** Web path to the app public root (trailing slash), e.g. `/` or `/threeball/`. */
+function app_public_directory_path(): string
+{
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
+    $dir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+    if ($dir === '' || $dir === '.') {
+        return '/';
+    }
+    return $dir . '/';
+}
+
+/** Absolute URL to the app public root (for QR / sharing). */
+function app_public_root_absolute(): string
+{
+    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    return $scheme . '://' . $host . app_public_directory_path();
+}
+
 function post_int(string $key, int $default = 0): int
 {
     if (!isset($_POST[$key]) || $_POST[$key] === '') {
@@ -33,65 +52,68 @@ function active_tournament(): ?array
     return $row ?: null;
 }
 
-/** Tournament pause state stored in file so display (often on different device) can read it */
+/** Pause flag on the active tournament row (SQLite) so any client sees the same state */
 function tournament_paused(): bool
 {
-    $path = dirname(__DIR__) . '/data/tournament_paused';
-    return is_file($path) && trim((string) file_get_contents($path)) === '1';
+    require_once __DIR__ . '/db.php';
+    $t = active_tournament();
+    if (!$t) {
+        return false;
+    }
+    return (int) ($t['paused'] ?? 0) === 1;
 }
 
 function set_tournament_paused(bool $paused): void
 {
-    $dir = dirname(__DIR__) . '/data';
-    if (!is_dir($dir)) {
-        mkdir($dir, 0777, true);
+    require_once __DIR__ . '/db.php';
+    $t = active_tournament();
+    if (!$t) {
+        return;
     }
-    $path = $dir . '/tournament_paused';
-    if ($paused) {
-        file_put_contents($path, '1');
-    } elseif (is_file($path)) {
-        unlink($path);
-    }
+    $stmt = db()->prepare('UPDATE tournaments SET paused = ? WHERE id = ?');
+    $stmt->execute([$paused ? 1 : 0, (int) $t['id']]);
 }
 
-/** Hide eliminated players on display; stored in file so display (on different device) reads it */
+/** Hide eliminated players on display; flag on the active tournament row */
 function hide_out_players(): bool
 {
-    $path = dirname(__DIR__) . '/data/hide_out_players';
-    return is_file($path) && trim((string) file_get_contents($path)) === '1';
+    require_once __DIR__ . '/db.php';
+    $t = active_tournament();
+    if (!$t) {
+        return false;
+    }
+    return (int) ($t['hide_out_players'] ?? 0) === 1;
 }
 
 function set_hide_out_players(bool $hide): void
 {
-    $dir = dirname(__DIR__) . '/data';
-    if (!is_dir($dir)) {
-        mkdir($dir, 0777, true);
+    require_once __DIR__ . '/db.php';
+    $t = active_tournament();
+    if (!$t) {
+        return;
     }
-    $path = $dir . '/hide_out_players';
-    if ($hide) {
-        file_put_contents($path, '1');
-    } elseif (is_file($path)) {
-        unlink($path);
-    }
+    $stmt = db()->prepare('UPDATE tournaments SET hide_out_players = ? WHERE id = ?');
+    $stmt->execute([$hide ? 1 : 0, (int) $t['id']]);
 }
 
 /** Set when a round completes (auto-pause). Cleared when Start Next Round is clicked. */
 function round_complete(): bool
 {
-    $path = dirname(__DIR__) . '/data/round_complete';
-    return is_file($path) && trim((string) file_get_contents($path)) === '1';
+    require_once __DIR__ . '/db.php';
+    $t = active_tournament();
+    if (!$t) {
+        return false;
+    }
+    return (int) ($t['round_complete'] ?? 0) === 1;
 }
 
 function set_round_complete(bool $complete): void
 {
-    $dir = dirname(__DIR__) . '/data';
-    if (!is_dir($dir)) {
-        mkdir($dir, 0777, true);
+    require_once __DIR__ . '/db.php';
+    $t = active_tournament();
+    if (!$t) {
+        return;
     }
-    $path = $dir . '/round_complete';
-    if ($complete) {
-        file_put_contents($path, '1');
-    } elseif (is_file($path)) {
-        unlink($path);
-    }
+    $stmt = db()->prepare('UPDATE tournaments SET round_complete = ? WHERE id = ?');
+    $stmt->execute([$complete ? 1 : 0, (int) $t['id']]);
 }
