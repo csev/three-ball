@@ -23,7 +23,9 @@ $players = players_with_computed($tournamentId);
 
 $startingPot = isset($_POST['starting_pot']) ? max(0, (int) $_POST['starting_pot']) : (int) $tournament['starting_pot'];
 $startingFirstFive = isset($_POST['starting_first_five_round_pot']) ? max(0, (int) $_POST['starting_first_five_round_pot']) : (int) ($tournament['starting_first_five_round_pot'] ?? $tournament['first_five_round_pot'] ?? 0);
-$currentCycle = isset($_POST['current_cycle_number']) ? max(1, min(15, (int) $_POST['current_cycle_number'])) : (int) ($tournament['current_cycle_number'] ?? 1);
+$currentCycle = isset($_POST['current_cycle_number']) ? max(1, (int) $_POST['current_cycle_number']) : (int) ($tournament['current_cycle_number'] ?? 1);
+
+$maxRound = tournament_max_round_column($tournamentId, $currentCycle);
 
 $pdo = db();
 $pdo->beginTransaction();
@@ -60,9 +62,12 @@ try {
 
     foreach ($players as $player) {
         $pid = (int) $player['id'];
-        for ($r = 1; $r <= 15; $r++) {
-            $key = $pid . '_' . $r;
-            $raw = trim((string) ($_POST['score_' . $pid . '_' . $r] ?? ''));
+        for ($r = 1; $r <= $maxRound; $r++) {
+            $fieldName = 'score_' . $pid . '_' . $r;
+            if (!array_key_exists($fieldName, $_POST)) {
+                continue;
+            }
+            $raw = trim((string) $_POST[$fieldName]);
             $keyDb = $pid . '_' . $r;
             $existing = $existingTurns[$keyDb] ?? null;
 

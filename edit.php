@@ -16,7 +16,10 @@ if (!$state) {
 $t = $state['tournament'];
 $players = $state['players'];
 $chipsPerPlayer = (int)($t['chips_per_player'] ?? 5);
-$scoresByRound = player_scores_by_round((int) $t['id']);
+$tournamentId = (int) $t['id'];
+$currentCycle = (int)($t['current_cycle_number'] ?? 1);
+$maxRound = tournament_max_round_column($tournamentId, $currentCycle);
+$scoresByRound = player_scores_by_round($tournamentId);
 ?>
 <!doctype html>
 <html lang="en">
@@ -62,7 +65,7 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:center;padding-bottom:1rem;border-bottom:1px solid #333">
 <label style="display:flex;align-items:center;gap:.5rem">Main Pot Origin: $<input type="number" name="starting_pot" min="0" value="<?= (int)($t['starting_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
 <label style="display:flex;align-items:center;gap:.5rem">First <?= $chipsPerPlayer ?> Pot Origin: $<input type="number" name="starting_first_five_round_pot" min="0" value="<?= (int)($t['starting_first_five_round_pot'] ?? $t['first_five_round_pot'] ?? 0) ?>" style="width:5rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
-<label style="display:flex;align-items:center;gap:.5rem">Current Round: <input type="number" name="current_cycle_number" min="1" max="15" value="<?= (int)($t['current_cycle_number'] ?? 1) ?>" style="width:4rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
+<label style="display:flex;align-items:center;gap:.5rem">Current Round: <input type="number" name="current_cycle_number" min="1" value="<?= $currentCycle ?>" style="width:4rem;padding:.4rem;font-size:1rem;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:6px"></label>
 </div>
 </div>
 <div class="card">
@@ -76,7 +79,7 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <th class="col-frozen col-frozen-4">First <?= $chipsPerPlayer ?> $</th>
 <th class="col-frozen col-frozen-5">Main $</th>
 <th class="col-frozen col-frozen-6">Status</th>
-<?php for ($r = 1; $r <= 15; $r++): ?><th class="col-round"><?= $r ?></th><?php endfor; ?>
+<?php for ($r = 1; $r <= $maxRound; $r++): ?><th class="col-round" id="round-col-<?= $r ?>"><?= $r ?></th><?php endfor; ?>
 </tr>
 </thead>
 <tbody>
@@ -93,7 +96,7 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <td class="col-frozen col-frozen-4"><input type="number" name="first_five_amount_<?= $pid ?>" class="pot-amt" min="0" value="<?= (int)($player['first_five_amount'] ?? 0) ?>"></td>
 <td class="col-frozen col-frozen-5"><input type="number" name="main_pot_amount_<?= $pid ?>" class="pot-amt" min="0" value="<?= (int)($player['main_pot_amount'] ?? 0) ?>"></td>
 <td class="col-frozen col-frozen-6 status-cell <?= $isOut ? 'out' : '' ?>" data-pid="<?= $pid ?>"><?= $chips > 0 ? 'IN' : 'OUT' ?></td>
-<?php for ($r = 1; $r <= 15; $r++):
+<?php for ($r = 1; $r <= $maxRound; $r++):
     $val = $scores[$r] ?? '';
 ?><td class="col-round"><input type="text" name="score_<?= $pid ?>_<?= $r ?>" value="<?= h($val) ?>" placeholder="—" maxlength="3" title="1–5 or TO"></td>
 <?php endfor; ?>
@@ -109,5 +112,13 @@ button.primary:hover,a.btn:hover{opacity:.9}
 </div>
 </form>
 </div>
+<script>
+(function () {
+  var wrap = document.querySelector('.edit-wrap');
+  var cell = document.getElementById('round-col-<?= $currentCycle ?>');
+  if (!wrap || !cell) return;
+  cell.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'end' });
+})();
+</script>
 </body>
 </html>

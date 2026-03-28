@@ -37,6 +37,9 @@ a{color:#90caf9;font-weight:bold}
     exit;
 }
 $t = $state['tournament'];
+$tournamentId = (int) $t['id'];
+$currentCycle = (int)($t['current_cycle_number'] ?? 1);
+$maxRound = tournament_max_round_column($tournamentId, $currentCycle);
 $current = $state['current_player'];
 $expires = $t['current_turn_expires_at'] ?? null;
 $breakStartedAt = $t['break_started_at'] ?? null;
@@ -131,13 +134,13 @@ $showUpNext = $upNext && !$atEndOfRound;
 </div>
 
 <?php
-$scoresByRound = player_scores_by_round((int) $t['id']);
+$scoresByRound = player_scores_by_round($tournamentId);
 $displayPlayers = hide_out_players()
     ? array_values(array_filter($state['players'], fn($p) => !(int)($p['is_eliminated'] ?? 0)))
     : $state['players'];
 /* Per-round min score for gold highlighting (only numeric 1–5 count) */
 $minByRound = [];
-for ($r = 1; $r <= 15; $r++) {
+for ($r = 1; $r <= $maxRound; $r++) {
     $scoresInRound = [];
     foreach ($displayPlayers as $player) {
         $val = $scoresByRound[(int)$player['id']][$r] ?? '';
@@ -160,7 +163,7 @@ for ($r = 1; $r <= 15; $r++) {
 <th class="col-frozen col-frozen-4">First <?= $chipsPerPlayer ?> $</th>
 <th class="col-frozen col-frozen-5">Main $</th>
 <th class="col-frozen col-frozen-6">Status</th>
-<?php for ($r = 1; $r <= 15; $r++): ?><th class="col-round"><?= $r ?></th><?php endfor; ?>
+<?php for ($r = 1; $r <= $maxRound; $r++): ?><th class="col-round" id="round-col-<?= $r ?>"><?= $r ?></th><?php endfor; ?>
 </tr>
 </thead>
 <tbody>
@@ -180,7 +183,7 @@ foreach ($displayPlayers as $player):
 <td class="col-frozen col-frozen-4">$<?= h((string)($player['first_five_amount'] ?? 0)) ?></td>
 <td class="col-frozen col-frozen-5">$<?= h((string)($player['main_pot_amount'] ?? 0)) ?></td>
 <td class="col-frozen col-frozen-6 <?= (int)$player['is_eliminated'] ? 'out' : '' ?>"><?= (int)$player['is_eliminated'] ? 'OUT' : 'IN' ?></td>
-<?php for ($r = 1; $r <= 15; $r++):
+<?php for ($r = 1; $r <= $maxRound; $r++):
     $val = $scores[$r] ?? '';
     $scoreClass = in_array((string)$val, ['1','2','3']) ? ' score-1' : ((string)$val === '4' ? ' score-4' : ((string)$val === '5' ? ' score-5' : ''));
     $isLowest = $minByRound[$r] !== null && $val !== '' && $val !== 'TO' && ctype_digit((string)$val) && (int)$val === $minByRound[$r];
@@ -221,6 +224,12 @@ function tick() {
 }
 setInterval(tick, 250);
 tick();
+(function () {
+  var wrap = document.querySelector('.leaderboard-wrap');
+  var cell = document.getElementById('round-col-<?= $currentCycle ?>');
+  if (!wrap || !cell) return;
+  cell.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'end' });
+})();
 </script>
 </body>
 </html>

@@ -33,7 +33,21 @@ function total_turns(int $tournamentId): int
     return (int) $stmt->fetchColumn();
 }
 
-/** Returns [playerId => [cycleNumber => score|'TO']] for rounds 1-15 */
+/** Highest cycle_number present in turns (0 if none). */
+function max_cycle_in_turns(int $tournamentId): int
+{
+    $stmt = db()->prepare('SELECT COALESCE(MAX(cycle_number), 0) FROM turns WHERE tournament_id = ?');
+    $stmt->execute([$tournamentId]);
+    return (int) $stmt->fetchColumn();
+}
+
+/** How many round columns to render: at least 1, covers current round and any stored turns. */
+function tournament_max_round_column(int $tournamentId, int $currentCycleNumber): int
+{
+    return max(1, $currentCycleNumber, max_cycle_in_turns($tournamentId));
+}
+
+/** Returns [playerId => [cycleNumber => score|'TO']] for all stored rounds */
 function player_scores_by_round(int $tournamentId): array
 {
     $stmt = db()->prepare("SELECT player_id, cycle_number, score, result_type FROM turns WHERE tournament_id = ?");
@@ -43,8 +57,12 @@ function player_scores_by_round(int $tournamentId): array
     foreach ($rows as $r) {
         $pid = (int) $r['player_id'];
         $cycle = (int) $r['cycle_number'];
-        if ($cycle < 1 || $cycle > 15) continue;
-        if (!isset($out[$pid])) $out[$pid] = [];
+        if ($cycle < 1) {
+            continue;
+        }
+        if (!isset($out[$pid])) {
+            $out[$pid] = [];
+        }
         $out[$pid][$cycle] = $r['result_type'] === 'timeout' ? 'TO' : (string) ($r['score'] ?? '');
     }
     return $out;
@@ -232,7 +250,7 @@ function advance_queue(int $tournamentId): void
 
     if ($nextId === null) {
         // Round complete: everyone has played. Auto-pause so folks can get paid, double-check scores.
-        $cycleNumber = min(15, $cycleNumber + 1);
+        $cycleNumber = $cycleNumber + 1;
         shuffle($active);
         $firstActiveId = (int) $active[0]['id'];
         $upNextId = player_after_current_round($tournamentId, $cycleNumber, $firstActiveId);
