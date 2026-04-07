@@ -55,7 +55,6 @@ $isViewMode = isset($_GET['view']) && $_GET['view'] === '1';
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Three-Ball Display</title>
-<meta http-equiv="refresh" content="5">
 <style>
 body{font-family:Arial,sans-serif;background:#081018;color:white;margin:0;padding:2rem}
 .wrap{max-width:1800px;margin:0 auto}
@@ -105,14 +104,14 @@ body.view-mode .small{font-size:0.95rem}
 </style>
 </head>
 <body<?= $isViewMode ? ' class="view-mode"' : '' ?>>
-<?php if ($isPaused): ?><div class="paused-banner">PAUSED</div><?php endif; ?>
+<div id="paused-banner" class="paused-banner" style="display:<?= $isPaused ? 'block' : 'none' ?>">PAUSED</div>
 <div class="wrap">
 <div class="header">
 <div>
-<div class="title"><?= h($t['name']) ?></div>
-<div class="pot">Current Pot: $<?= h((string)($state['computed_main_pot'] ?? $t['current_pot'])) ?></div>
-<div class="pot">First <?= $chipsPerPlayer ?> Pot: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></div>
-<div class="small">Current Round: <?= h((string)($t['current_cycle_number'] ?? 1)) ?></div>
+<div class="title" id="disp-title"><?= h($t['name']) ?></div>
+<div class="pot" id="disp-main-pot">Current Pot: $<?= h((string)($state['computed_main_pot'] ?? $t['current_pot'])) ?></div>
+<div class="pot" id="disp-first-pot">First <?= $chipsPerPlayer ?> Pot: $<?= h((string)($state['computed_first_five_pot'] ?? $t['first_five_round_pot'] ?? 0)) ?></div>
+<div class="small" id="disp-round">Current Round: <?= h((string)($t['current_cycle_number'] ?? 1)) ?></div>
 </div>
 <?php
 $upNext = $state['up_next'] ?? null;
@@ -122,10 +121,10 @@ $showUpNext = $upNext && !$atEndOfRound;
 <div class="qr-wrap" style="gap:1.5rem">
 <div>
 <div class="small">Now Shooting</div>
-<div class="upnext"><?= h($current['display_name'] ?? 'Waiting...') ?></div>
+<div class="upnext" id="disp-current-name"><?= h($current['display_name'] ?? 'Waiting...') ?></div>
 <div class="timer" id="timer">--</div>
-<div class="upnext-secondary"><?= $showUpNext ? 'Up Next' : '' ?></div>
-<div class="upnext-secondary"><?= $showUpNext ? h($upNext['display_name']) : 'End of Round' ?></div>
+<div class="upnext-secondary" id="disp-up-label"><?= $showUpNext ? 'Up Next' : '' ?></div>
+<div class="upnext-secondary" id="disp-up-name"><?= $showUpNext ? h($upNext['display_name']) : 'End of Round' ?></div>
 </div>
 <?php if ($showQrCode): ?>
 <a href="<?= h($displayUrlForQr) ?>" title="Open display"><img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=<?= rawurlencode($displayUrlForQr) ?>" alt="QR: Display" width="260" height="260"></a>
@@ -150,6 +149,7 @@ for ($r = 1; $r <= $maxRound; $r++) {
     }
     $minByRound[$r] = $scoresInRound ? min($scoresInRound) : null;
 }
+$structureKeyInit = $maxRound . ':' . implode(',', array_map(fn($p) => (string) (int) $p['id'], $displayPlayers));
 ?>
 <div class="card">
 <h2 style="margin-top:0">Leaderboard / Queue</h2>
@@ -166,7 +166,7 @@ for ($r = 1; $r <= $maxRound; $r++) {
 <?php for ($r = 1; $r <= $maxRound; $r++): ?><th class="col-round" id="round-col-<?= $r ?>"><?= $r ?></th><?php endfor; ?>
 </tr>
 </thead>
-<tbody>
+<tbody id="leaderboard-body">
 <?php
 $upNextForRow = $showUpNext ? $upNext : null;
 foreach ($displayPlayers as $player):
@@ -176,7 +176,7 @@ foreach ($displayPlayers as $player):
     $isUpNext = $upNextForRow && (int)$upNextForRow['id'] === $pid;
     $rowClass = $isActive ? 'active-player' : ($isUpNext ? 'up-next-player' : '');
 ?>
-<tr<?= $rowClass ? ' class="' . $rowClass . '"' : '' ?>>
+<tr data-player-id="<?= $pid ?>"<?= $rowClass ? ' class="' . h($rowClass) . '"' : '' ?>>
 <td class="col-frozen"><?= h((string)$player['queue_position']) ?></td>
 <td class="col-frozen col-frozen-2"><?= h($player['display_name']) ?></td>
 <td class="col-frozen col-frozen-3"><?= h((string)$player['chips_remaining']) ?></td>
@@ -197,38 +197,222 @@ foreach ($displayPlayers as $player):
 </div>
 </div>
 <script>
-const expiresAt = <?= json_encode($expires) ?>;
-const breakStartedAt = <?= json_encode($breakStartedAt) ?>;
-const timerEl = document.getElementById('timer');
-function tick() {
-  if (breakStartedAt) {
-    timerEl.classList.remove('timer-late');
-    const start = new Date(breakStartedAt).getTime();
-    const elapsed = Math.floor((Date.now() - start) / 1000);
-    const m = Math.floor(elapsed / 60);
-    const s = elapsed % 60;
-    timerEl.textContent = `+${m}:${String(s).padStart(2, '0')}`;
-    return;
-  }
-  if (!expiresAt) { timerEl.textContent = '--'; timerEl.classList.remove('timer-late'); return; }
-  const diff = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
-  if (diff <= 0) {
-    timerEl.textContent = 'LATE';
-    timerEl.classList.add('timer-late');
-  } else {
-    timerEl.classList.remove('timer-late');
-    const m = Math.floor(diff / 60);
-    const s = diff % 60;
-    timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
-  }
-}
-setInterval(tick, 250);
-tick();
 (function () {
-  var wrap = document.querySelector('.leaderboard-wrap');
-  var cell = document.getElementById('round-col-<?= $currentCycle ?>');
-  if (!wrap || !cell) return;
-  cell.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'end' });
+  var STATE_URL = <?= json_encode(app_public_directory_path() . 'api/state.php?display=1') ?>;
+  var expiresAt = <?= json_encode($expires) ?>;
+  var breakStartedAt = <?= json_encode($breakStartedAt) ?>;
+  var timerEl = document.getElementById('timer');
+  var chipsPerPlayer = <?= (int) $chipsPerPlayer ?>;
+  var lastStructureKey = <?= json_encode($structureKeyInit) ?>;
+
+  function tick() {
+    if (breakStartedAt) {
+      timerEl.classList.remove('timer-late');
+      var start = new Date(breakStartedAt).getTime();
+      var elapsed = Math.floor((Date.now() - start) / 1000);
+      var m = Math.floor(elapsed / 60);
+      var s = elapsed % 60;
+      timerEl.textContent = '+' + m + ':' + String(s).padStart(2, '0');
+      return;
+    }
+    if (!expiresAt) { timerEl.textContent = '--'; timerEl.classList.remove('timer-late'); return; }
+    var diff = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
+    if (diff <= 0) {
+      timerEl.textContent = 'LATE';
+      timerEl.classList.add('timer-late');
+    } else {
+      timerEl.classList.remove('timer-late');
+      var dm = Math.floor(diff / 60);
+      var ds = diff % 60;
+      timerEl.textContent = dm + ':' + String(ds).padStart(2, '0');
+    }
+  }
+
+  function minForRound(minByRound, r) {
+    if (!minByRound) return null;
+    return minByRound[r] !== undefined && minByRound[r] !== null ? minByRound[r] : minByRound[String(r)];
+  }
+
+  function scoreClasses(val, r, minByRound) {
+    var v = String(val === undefined || val === null ? '' : val);
+    var cls = 'col-round';
+    if (['1', '2', '3'].indexOf(v) !== -1) cls += ' score-1';
+    else if (v === '4') cls += ' score-4';
+    else if (v === '5') cls += ' score-5';
+    var low = minForRound(minByRound, r);
+    if (low !== null && low !== undefined && v !== '' && v !== 'TO' && /^\d+$/.test(v) && parseInt(v, 10) === low) cls += ' lowest';
+    return cls;
+  }
+
+  function structureKey(d) {
+    if (!d || !d.display) return '';
+    return d.display.max_round + ':' + d.display.players.map(function (p) { return p.id; }).join(',');
+  }
+
+  function scrollCurrentRoundIntoView(cycle) {
+    var wrap = document.querySelector('.leaderboard-wrap');
+    var cell = document.getElementById('round-col-' + cycle);
+    if (!wrap || !cell) return;
+    cell.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'end' });
+  }
+
+  function rebuildLeaderboard(data) {
+    var t = data.tournament;
+    var d = data.display;
+    var scoresByRound = data.player_scores_by_round;
+    var minByRound = d.min_by_round;
+    var curId = data.current_player ? parseInt(data.current_player.id, 10) : null;
+    var upId = d.show_up_next && data.up_next ? parseInt(data.up_next.id, 10) : null;
+
+    var theadRow = document.querySelector('.leaderboard thead tr');
+    theadRow.querySelectorAll('.col-round').forEach(function (th) { th.remove(); });
+    var r;
+    for (r = 1; r <= d.max_round; r++) {
+      var th = document.createElement('th');
+      th.className = 'col-round';
+      th.id = 'round-col-' + r;
+      th.textContent = String(r);
+      theadRow.appendChild(th);
+    }
+
+    var tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = '';
+    d.players.forEach(function (p) {
+      var pid = parseInt(p.id, 10);
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-player-id', String(pid));
+      if (curId && curId === pid) tr.classList.add('active-player');
+      if (upId && upId === pid) tr.classList.add('up-next-player');
+
+      function addTd(text, cls) {
+        var td = document.createElement('td');
+        if (cls) td.className = cls;
+        td.textContent = text;
+        return td;
+      }
+
+      tr.appendChild(addTd(String(p.queue_position), 'col-frozen'));
+      tr.appendChild(addTd(p.display_name || '', 'col-frozen col-frozen-2'));
+      tr.appendChild(addTd(String(p.chips_remaining), 'col-frozen col-frozen-3'));
+      tr.appendChild(addTd('$' + String(p.first_five_amount != null ? p.first_five_amount : 0), 'col-frozen col-frozen-4'));
+      tr.appendChild(addTd('$' + String(p.main_pot_amount != null ? p.main_pot_amount : 0), 'col-frozen col-frozen-5'));
+      var out = parseInt(p.is_eliminated, 10) === 1;
+      tr.appendChild(addTd(out ? 'OUT' : 'IN', 'col-frozen col-frozen-6' + (out ? ' out' : '')));
+
+      var rowScores = scoresByRound[pid] || scoresByRound[String(pid)] || {};
+      for (r = 1; r <= d.max_round; r++) {
+        var val = rowScores[r] !== undefined ? rowScores[r] : rowScores[String(r)];
+        var td = document.createElement('td');
+        td.className = scoreClasses(val, r, minByRound);
+        td.textContent = val === undefined || val === null ? '' : String(val);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    });
+  }
+
+  function updateLeaderboardCells(data) {
+    var d = data.display;
+    var scoresByRound = data.player_scores_by_round;
+    var minByRound = d.min_by_round;
+    var curId = data.current_player ? parseInt(data.current_player.id, 10) : null;
+    var upId = d.show_up_next && data.up_next ? parseInt(data.up_next.id, 10) : null;
+    var tbody = document.getElementById('leaderboard-body');
+    if (!tbody) return;
+
+    var i;
+    for (i = 0; i < d.players.length; i++) {
+      var p = d.players[i];
+      var pid = parseInt(p.id, 10);
+      var row = tbody.querySelector('tr[data-player-id="' + pid + '"]');
+      if (!row) {
+        rebuildLeaderboard(data);
+        scrollCurrentRoundIntoView(parseInt(data.tournament.current_cycle_number, 10));
+        return;
+      }
+      row.className = '';
+      if (curId && curId === pid) row.classList.add('active-player');
+      if (upId && upId === pid) row.classList.add('up-next-player');
+
+      var cells = row.children;
+      cells[0].textContent = String(p.queue_position);
+      cells[1].textContent = p.display_name || '';
+      cells[2].textContent = String(p.chips_remaining);
+      cells[3].textContent = '$' + String(p.first_five_amount != null ? p.first_five_amount : 0);
+      cells[4].textContent = '$' + String(p.main_pot_amount != null ? p.main_pot_amount : 0);
+      var out = parseInt(p.is_eliminated, 10) === 1;
+      cells[5].textContent = out ? 'OUT' : 'IN';
+      cells[5].className = 'col-frozen col-frozen-6' + (out ? ' out' : '');
+
+      var rowScores = scoresByRound[pid] || scoresByRound[String(pid)] || {};
+      for (var r = 1; r <= d.max_round; r++) {
+        var val = rowScores[r] !== undefined ? rowScores[r] : rowScores[String(r)];
+        var td = cells[5 + r];
+        if (!td) continue;
+        td.className = scoreClasses(val, r, minByRound);
+        td.textContent = val === undefined || val === null ? '' : String(val);
+      }
+    }
+  }
+
+  function applyState(data) {
+    if (!data) return;
+    var t = data.tournament;
+    var d = data.display;
+    expiresAt = t.current_turn_expires_at || null;
+    breakStartedAt = t.break_started_at || null;
+
+    var pausedEl = document.getElementById('paused-banner');
+    if (pausedEl) pausedEl.style.display = parseInt(t.paused, 10) === 1 ? 'block' : 'none';
+
+    document.getElementById('disp-title').textContent = t.name || '';
+    document.getElementById('disp-main-pot').textContent = 'Current Pot: $' + String(data.computed_main_pot != null ? data.computed_main_pot : t.current_pot);
+    document.getElementById('disp-first-pot').textContent = 'First ' + chipsPerPlayer + ' Pot: $' + String(data.computed_first_five_pot != null ? data.computed_first_five_pot : (t.first_five_round_pot || 0));
+    document.getElementById('disp-round').textContent = 'Current Round: ' + String(t.current_cycle_number != null ? t.current_cycle_number : 1);
+
+    var cur = data.current_player;
+    document.getElementById('disp-current-name').textContent = cur && cur.display_name ? cur.display_name : 'Waiting...';
+
+    var upLabel = document.getElementById('disp-up-label');
+    var upName = document.getElementById('disp-up-name');
+    if (d.show_up_next && data.up_next) {
+      upLabel.textContent = 'Up Next';
+      upName.textContent = data.up_next.display_name || '';
+    } else {
+      upLabel.textContent = '';
+      upName.textContent = 'End of Round';
+    }
+
+    if (!d) return;
+    var sk = structureKey(data);
+    if (sk !== lastStructureKey) {
+      lastStructureKey = sk;
+      var wrap = document.querySelector('.leaderboard-wrap');
+      var sl = wrap ? wrap.scrollLeft : 0;
+      rebuildLeaderboard(data);
+      if (wrap) wrap.scrollLeft = sl;
+      scrollCurrentRoundIntoView(parseInt(t.current_cycle_number, 10));
+      return;
+    }
+    updateLeaderboardCells(data);
+  }
+
+  function poll() {
+    fetch(STATE_URL, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) return;
+      return r.json();
+    }).then(function (data) {
+      if (!data) return;
+      applyState(data);
+    }).catch(function () {});
+  }
+
+  setInterval(tick, 250);
+  tick();
+  setInterval(poll, 5000);
+  poll();
+
+  scrollCurrentRoundIntoView(<?= (int) $currentCycle ?>);
 })();
 </script>
 </body>
