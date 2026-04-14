@@ -81,7 +81,7 @@ try {
 
             $score = null;
             $resultType = 'scored';
-            if (strtoupper($raw) === 'TO') {
+            if (in_array(strtoupper($raw), ['TO', 'T.V.', 'TV'], true)) {
                 $resultType = 'timeout';
                 $chipDelta = -1;
             } else {

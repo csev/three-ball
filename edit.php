@@ -58,7 +58,7 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <body>
 <div class="wrap">
 <h1>Edit Tournament — <?= h($t['name']) ?></h1>
-<p style="color:#999;font-size:.9rem">Edit First <?= $chipsPerPlayer ?> $, Main $, and round scores. Chips and IN/OUT are computed from scores (initial chips minus 5s/timeouts). Scores: 1–5 or TO (timeout). Pot origins set the starting pool; computed pot = origin minus total awarded.</p>
+<p style="color:#999;font-size:.9rem">Edit First <?= $chipsPerPlayer ?> $, Main $, and round scores. Chips and IN/OUT are computed from scores (initial chips minus 5s/timeouts). Scores: 1–5 or T.V. (Time Violation). Pot origins set the starting pool; computed pot = origin minus total awarded.</p>
 
 <form method="post" action="api/save_edit.php">
 <div class="card" style="margin-bottom:1rem">
@@ -98,7 +98,7 @@ button.primary:hover,a.btn:hover{opacity:.9}
 <td class="col-frozen col-frozen-6 status-cell <?= $isOut ? 'out' : '' ?>" data-pid="<?= $pid ?>"><?= $chips > 0 ? 'IN' : 'OUT' ?></td>
 <?php for ($r = 1; $r <= $maxRound; $r++):
     $val = $scores[$r] ?? '';
-?><td class="col-round"><input type="text" name="score_<?= $pid ?>_<?= $r ?>" value="<?= h($val) ?>" placeholder="—" maxlength="3" title="1–5 or TO"></td>
+?><td class="col-round"><input type="text" name="score_<?= $pid ?>_<?= $r ?>" value="<?= h($val) ?>" placeholder="—" maxlength="4" title="1–5 or T.V."></td>
 <?php endfor; ?>
 </tr>
 <?php endforeach; ?>

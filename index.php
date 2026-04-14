@@ -143,7 +143,7 @@ for ($r = 1; $r <= $maxRound; $r++) {
     $scoresInRound = [];
     foreach ($displayPlayers as $player) {
         $val = $scoresByRound[(int)$player['id']][$r] ?? '';
-        if ($val !== '' && $val !== 'TO' && ctype_digit((string)$val)) {
+        if ($val !== '' && !in_array($val, ['TO', 'T.V.'], true) && ctype_digit((string)$val)) {
             $scoresInRound[] = (int) $val;
         }
     }
@@ -186,7 +186,7 @@ foreach ($displayPlayers as $player):
 <?php for ($r = 1; $r <= $maxRound; $r++):
     $val = $scores[$r] ?? '';
     $scoreClass = in_array((string)$val, ['1','2','3']) ? ' score-1' : ((string)$val === '4' ? ' score-4' : ((string)$val === '5' ? ' score-5' : ''));
-    $isLowest = $minByRound[$r] !== null && $val !== '' && $val !== 'TO' && ctype_digit((string)$val) && (int)$val === $minByRound[$r];
+    $isLowest = $minByRound[$r] !== null && $val !== '' && !in_array($val, ['TO', 'T.V.'], true) && ctype_digit((string)$val) && (int)$val === $minByRound[$r];
 ?><td class="col-round<?= $scoreClass ?><?= $isLowest ? ' lowest' : '' ?>"><?= h($val) ?></td>
 <?php endfor; ?>
 </tr>
@@ -240,7 +240,7 @@ foreach ($displayPlayers as $player):
     else if (v === '4') cls += ' score-4';
     else if (v === '5') cls += ' score-5';
     var low = minForRound(minByRound, r);
-    if (low !== null && low !== undefined && v !== '' && v !== 'TO' && /^\d+$/.test(v) && parseInt(v, 10) === low) cls += ' lowest';
+    if (low !== null && low !== undefined && v !== '' && v !== 'TO' && v !== 'T.V.' && /^\d+$/.test(v) && parseInt(v, 10) === low) cls += ' lowest';
     return cls;
   }
 

@@ -23,7 +23,7 @@ if (isset($_GET['display']) && ($_GET['display'] === '1' || $_GET['display'] ===
         $scoresInRound = [];
         foreach ($players as $player) {
             $val = $scoresByRound[(int) $player['id']][$r] ?? '';
-            if ($val !== '' && $val !== 'TO' && ctype_digit((string) $val)) {
+            if ($val !== '' && !in_array($val, ['TO', 'T.V.'], true) && ctype_digit((string) $val)) {
                 $scoresInRound[] = (int) $val;
             }
         }

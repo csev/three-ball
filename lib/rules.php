@@ -47,7 +47,7 @@ function tournament_max_round_column(int $tournamentId, int $currentCycleNumber)
     return max(1, $currentCycleNumber, max_cycle_in_turns($tournamentId));
 }
 
-/** Returns [playerId => [cycleNumber => score|'TO']] for all stored rounds */
+/** Returns [playerId => [cycleNumber => score|'T.V.']] for all stored rounds */
 function player_scores_by_round(int $tournamentId): array
 {
     $stmt = db()->prepare("SELECT player_id, cycle_number, score, result_type FROM turns WHERE tournament_id = ?");
@@ -63,7 +63,7 @@ function player_scores_by_round(int $tournamentId): array
         if (!isset($out[$pid])) {
             $out[$pid] = [];
         }
-        $out[$pid][$cycle] = $r['result_type'] === 'timeout' ? 'TO' : (string) ($r['score'] ?? '');
+        $out[$pid][$cycle] = $r['result_type'] === 'timeout' ? 'T.V.' : (string) ($r['score'] ?? '');
     }
     return $out;
 }
