@@ -152,8 +152,14 @@ td,th{padding:.4rem;border-bottom:1px solid #333;text-align:left}
 <script>
 const expiresAt = <?= json_encode($expires) ?>;
 const breakStartedAt = <?= json_encode($breakStartedAt) ?>;
+const isPaused = <?= $isPaused ? 'true' : 'false' ?>;
 const timerEl = document.getElementById('timer');
 function tick() {
+  if (isPaused) {
+    timerEl.textContent = 'PAUSED';
+    timerEl.className = 'timer';
+    return;
+  }
   if (breakStartedAt) {
     const start = new Date(breakStartedAt).getTime();
     const elapsed = Math.floor((Date.now() - start) / 1000);

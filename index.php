@@ -200,11 +200,17 @@ foreach ($displayPlayers as $player):
   var STATE_URL = <?= json_encode(app_public_directory_path() . 'api/state.php?display=1') ?>;
   var expiresAt = <?= json_encode($expires) ?>;
   var breakStartedAt = <?= json_encode($breakStartedAt) ?>;
+  var isPaused = <?= $isPaused ? 'true' : 'false' ?>;
   var timerEl = document.getElementById('timer');
   var chipsPerPlayer = <?= (int) $chipsPerPlayer ?>;
   var lastStructureKey = <?= json_encode($structureKeyInit) ?>;
 
   function tick() {
+    if (isPaused) {
+      timerEl.textContent = 'PAUSED';
+      timerEl.classList.remove('timer-late');
+      return;
+    }
     if (breakStartedAt) {
       timerEl.classList.remove('timer-late');
       var start = new Date(breakStartedAt).getTime();
@@ -360,6 +366,7 @@ foreach ($displayPlayers as $player):
     var d = data.display;
     expiresAt = t.current_turn_expires_at || null;
     breakStartedAt = t.break_started_at || null;
+    isPaused = parseInt(t.paused, 10) === 1;
 
     var pausedEl = document.getElementById('paused-banner');
     if (pausedEl) pausedEl.style.display = parseInt(t.paused, 10) === 1 ? 'block' : 'none';
