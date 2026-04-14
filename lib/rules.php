@@ -18,6 +18,21 @@ function active_players(int $tournamentId): array
     return array_values(array_filter($all, fn($p) => (int)($p['is_eliminated'] ?? 0) === 0));
 }
 
+/** Returns active players sorted by queue_position for deterministic round order. */
+function active_players_in_queue_order(int $tournamentId): array
+{
+    $active = active_players($tournamentId);
+    usort($active, function (array $a, array $b): int {
+        $qa = (int) ($a['queue_position'] ?? 0);
+        $qb = (int) ($b['queue_position'] ?? 0);
+        if ($qa !== $qb) {
+            return $qa <=> $qb;
+        }
+        return ((int) $a['id']) <=> ((int) $b['id']);
+    });
+    return $active;
+}
+
 function find_player(int $playerId): ?array
 {
     $stmt = db()->prepare('SELECT * FROM players WHERE id = ?');
@@ -131,7 +146,7 @@ function recent_turns(int $tournamentId, int $limit = 10): array
 /** Returns active players who have NOT played in current round (still in game, no score this round). */
 function remaining_to_shoot(int $tournamentId, int $cycleNumber): array
 {
-    $active = active_players($tournamentId);
+    $active = active_players_in_queue_order($tournamentId);
     if (empty($active)) {
         return [];
     }
@@ -147,14 +162,13 @@ function remaining_to_shoot(int $tournamentId, int $cycleNumber): array
     return $remaining;
 }
 
-/** Returns a random active player who has NOT played in current round. Null if round complete. */
+/** Returns next active player in queue order who has NOT played in current round. Null if round complete. */
 function next_player_for_current_round(int $tournamentId, int $cycleNumber): ?int
 {
     $remaining = remaining_to_shoot($tournamentId, $cycleNumber);
     if (empty($remaining)) {
         return null;
     }
-    shuffle($remaining);
     return (int) $remaining[0]['id'];
 }
 
@@ -176,7 +190,7 @@ function is_current_last_in_round(int $tournamentId, int $cycleNumber, int $curr
     return count($remaining) === 1 && (int) ($remaining[0] ?? 0) === $currentPlayerId;
 }
 
-/** Returns a random player id (other than current) who hasn't shot this round. Null if current is last this round. */
+/** Returns next player id in queue order (other than current) who hasn't shot this round. Null if current is last this round. */
 function player_after_current_round(int $tournamentId, int $cycleNumber, int $currentPlayerId): ?int
 {
     $remaining = remaining_to_shoot($tournamentId, $cycleNumber);
@@ -184,7 +198,6 @@ function player_after_current_round(int $tournamentId, int $cycleNumber, int $cu
     if (empty($others)) {
         return null;
     }
-    shuffle($others);
     return (int) $others[0]['id'];
 }
 
@@ -251,9 +264,29 @@ function advance_queue(int $tournamentId): void
     if ($nextId === null) {
         // Round complete: everyone has played. Auto-pause so folks can get paid, double-check scores.
         $cycleNumber = $cycleNumber + 1;
+        // Choose and persist next-round queue order once so paused preview and start match.
         shuffle($active);
+        $pdo = db();
+        $pos = 1;
+        $activeIds = [];
+        foreach ($active as $p) {
+            $pid = (int) $p['id'];
+            $activeIds[] = $pid;
+            $stmt = $pdo->prepare('UPDATE players SET queue_position = ? WHERE id = ?');
+            $stmt->execute([$pos++, $pid]);
+        }
+        $all = all_players($tournamentId);
+        foreach ($all as $p) {
+            $pid = (int) $p['id'];
+            if (in_array($pid, $activeIds, true)) {
+                continue;
+            }
+            $stmt = $pdo->prepare('UPDATE players SET queue_position = ? WHERE id = ?');
+            $stmt->execute([$pos++, $pid]);
+        }
+
         $firstActiveId = (int) $active[0]['id'];
-        $upNextId = player_after_current_round($tournamentId, $cycleNumber, $firstActiveId);
+        $upNextId = isset($active[1]) ? (int) $active[1]['id'] : null;
         $stmt = db()->prepare('UPDATE tournaments SET current_cycle_number = ?, current_player_id = ?, up_next_player_id = ?, break_started_at = NULL, current_turn_started_at = NULL, current_turn_expires_at = NULL WHERE id = ?');
         $stmt->execute([$cycleNumber, $firstActiveId, $upNextId, $tournamentId]);
         set_tournament_paused(true);

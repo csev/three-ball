@@ -27,7 +27,12 @@ if (empty($active)) {
 
 set_round_complete(false);
 set_tournament_paused(false);
-shuffle($active);
-start_turn($tournamentId, (int) $active[0]['id']);
+$nextId = !empty($tournament['current_player_id']) ? (int) $tournament['current_player_id'] : null;
+if ($nextId === null) {
+    $nextId = next_player_for_current_round($tournamentId, (int) ($tournament['current_cycle_number'] ?? 1));
+}
+if ($nextId !== null) {
+    start_turn($tournamentId, $nextId);
+}
 header('Location: ../control.php');
 exit;

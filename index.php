@@ -87,7 +87,6 @@ th,td{padding:.6rem .4rem;border-bottom:1px solid rgba(255,255,255,.12);text-ali
 .leaderboard tr.active-player .col-frozen,.leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3,.leaderboard tr.active-player .col-frozen-4,.leaderboard tr.active-player .col-frozen-5,.leaderboard tr.active-player .col-frozen-6{background:rgba(33,150,243,.35)}
 /* Sticky cols need solid backgrounds so scrolled content doesn't show through */
 .leaderboard tr.active-player .col-frozen-2,.leaderboard tr.active-player .col-frozen-3{background:#1a3d5c}
-.leaderboard tr.up-next-player td.col-frozen-2{background:#1a4720}
 .paused-banner{background:rgba(245,124,0,.95);color:#000;font-size:3rem;font-weight:800;text-align:center;padding:1.5rem;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .qr-wrap{display:flex;align-items:center}
 .qr-wrap img{width:260px;height:260px;background:white;padding:10px;border-radius:10px}
